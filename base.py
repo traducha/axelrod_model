@@ -17,14 +17,13 @@ n = 500
 p = av_k / (n - 1.0)
 q = 2
 f = 3
-rec = []
-suma = []
+switches_sum = []
 print("probability p: %s" % p)
 
 #creating random graph and generating random attributes
 g = ig.Graph.Erdos_Renyi(n, p)
 print("initial average degree was: %s" % (np.sum(g.degree()) * 1.0 / n))
-g.vs()["f"] = np.floor(rand((n, f))*q)
+g.vs()["f"] = np.int_(rand((n, f))*q)
 
 ################# Main loop #####################
 T = 1000
@@ -33,7 +32,7 @@ for i in range(T):
     index = int(rand()*n)
     neigs = g.neighbors(index)
     if not neigs:
-        suma.append(np.sum(rec))
+        switches_sum.append(np.sum(switches_sum))
         continue
     neig_index = random.choice(neigs)
     #compare attributes of two nodes
@@ -42,15 +41,14 @@ for i in range(T):
     m = np.count_nonzero((vertex_attrs == neighbor_attrs))
     #decide what to do according to common attributes
     if m == 0:
-        g.delete_edges(g.get_eid(index,neig_index))
-        new = random.choice(list(set(range(n)).difference(set(neigs))))
-        g.add_edges([(index,new)])
-        rec.append(1)
-    elif m > 0 and m != f and rand() < m*1.0/f:
-        change_i = random.choice(np.where((vertex_attrs == neighbor_attrs) == False))
-        g.vs(index)["f"][0][change_i] = g.vs(neig_index)["f"][0][change_i]
-        rec.append(0)
-    suma.append(np.sum(rec))
+        g.delete_edges((index,neig_index))
+        new_neig = random.choice(list(set(range(n)).difference(neigs)))
+        g.add_edges([(index,new_neig)])
+        switches_sum.append(np.sum(switches_sum)+1)
+    elif m != f and rand() < m*1.0/f:
+        change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
+        g.vs(index)["f"][0][change_attr] = g.vs(neig_index)["f"][0][change_attr]
+        switches_sum.append(np.sum(switches_sum))
     
     
     """if i > 1000000:
@@ -72,10 +70,12 @@ for i in range(T):
         if b:
             print i
             break"""
-print len(suma)
-print len(range(T))
+
 plt.plot(range(T), suma)
-#plt.show()
+plt.show()
+
+
+
 ############### Checking time of execution #############
 print("\n\n--- executed in %s seconds ---" % (time.time() - start_time))
 ########################################################
