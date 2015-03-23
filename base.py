@@ -8,6 +8,21 @@ import numpy as np
 from numpy.random import random as rand
 from matplotlib import pyplot as plt
 
+def write_clusters_to_file(clusters, name):
+    file = open(name, 'w')
+    file.writelines([str(clusters['q']).replace('[', '').replace(']', ''), '\n', str(clusters['s']).replace('[', '').replace(']', '')])
+    file.close()
+    return True
+
+def red_clusters_from_file(name):
+    file = open(name, 'r')
+    q = file.readline()
+    s = file.readline()
+    file.close()
+    q = [int(i) for i in q.split(', ')]
+    s = [float(i) for i in s.split(', ')]
+    return {'q': q, 's': s}
+
 def random_graph_with_attrs(N=2500, av_k=4.0, f=3, q=2):
     """Creating random graph and generating random attributes.
     @param N: number of nodes in the graph
@@ -59,32 +74,47 @@ def basic_algorithm(g, f, T):
             switches_sum.append(switches_sum[-1])
     return g, range(T+1), switches_sum
 
-def main():
+def loop_over_q():
     log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-    N = 100
+    N = 2500 #2500
     av_k = 4.0
     f = 3
-    times = 100
-    q_list = range(2, 10, 2) + range(10, 100, 5) + range(100, 1000, 50) + range(1000, 4000, 200)
+    clusters = {'q': [], 's': []}
+    times = 1000 #10000000
+    q_list = [1, 10, 150] #range(700, 1000, 50) + range(1000, 4000, 200)
+    
     for q in q_list:
         start_time = time.time()
         g = random_graph_with_attrs(N, av_k, f, q)
-        _, x, y = basic_algorithm(g, f, times)
-        log.info("algorithm for q = %s executed in %s seconds" % (q, (time.time() - start_time)))
+        g, x, y = basic_algorithm(g, f, times)
         
-        plt.plot(x, y)
+        log.info("algorithm for q = %s executed in %s seconds" % (q, round((time.time() - start_time), 4)))
+        g.write_pickle('graph_N='+str(N)+'_q='+str(q)+'_T='+str(times))
+        clusters['s'].append(len(g.clusters()[0]) * 1.0 / N)
+        clusters['q'].append(q)
+        
+        plt.plot(x[::1000], y[::1000])
         plt.title("Network with N = %s nodes, f = %s, q = %s" % (N, f, q))
         plt.xlabel('time step')
         plt.ylabel('total number of switches')
-        plt.savefig("switches_N="+str(N)+"_q="+str(q)+".png", format="png")
-        log.info("%s\% of algorithm executed" % (q, (time.time() - start_time)))
+        #plt.show() #plt.savefig("switches_N="+str(N)+"_q="+str(q)+".png", format="png")
+        plt.clf()
+        log.info("%s percent of algorithm executed" % round((100.0 * (q_list.index(q) + 1.0) / len(q_list)), 1) )
+        
+    write_clusters_to_file(clusters, name='clusters.txt')
+    return True
 
 if __name__ == "__main__":
     main_time = time.time()
-    main()
+    loop_over_q()
     log.info("main() function executed in %s seconds" % (time.time() - main_time))
 
 
+#reading g = ig.Graph.Read_Pickle('dupa')
+#TODO:
+#def check_clusters_homogenity(g):
+#    a = g.clusters()
+#    return g.clusters()
 """if i > 1000000:
         b = 0
         for sub_list in g.clusters():
