@@ -2,6 +2,7 @@
 
 import time
 import logging as log
+from multiprocessing import Pool
 import igraph as ig
 import random
 import numpy as np
@@ -41,7 +42,7 @@ def switch_connection(g, index, del_index, n, neigs):
     """
     """
     g.delete_edges((index, del_index))
-    new_neig = random.choice(list(set(range(n)).difference(neigs)))
+    new_neig = random.choice(list(set(range(n)).difference(neigs.append(index))))
     g.add_edges([(index, new_neig)])
     return g
 
@@ -74,31 +75,48 @@ def basic_algorithm(g, f, T):
             switches_sum.append(switches_sum[-1])
     return g, range(T+1), switches_sum
 
+def func_star(chain):
+    """Convert `f([1,2])` to `f(1,2)` call."""
+    return basic_algorithm(*chain)
+
 def loop_over_q():
     log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-    N = 2500 #2500
+    N = 500
     av_k = 4.0
     f = 3
     clusters = {'q': [], 's': []}
-    times = 1000 #10000000
-    q_list = [1, 10, 150] #range(700, 1000, 50) + range(1000, 4000, 200)
+    times = 10000000
+    q_list = [[1, 2, 4, 8], [10, 20, 40, 80],\
+        [100, 200, 400, 800], [1000, 700, 900, 500], [300, 85, 87, 83], [30, 50, 90, 95]] #range(700, 1000, 50) + range(1000, 4000, 200)
     
     for q in q_list:
         start_time = time.time()
-        g = random_graph_with_attrs(N, av_k, f, q)
-        g, x, y = basic_algorithm(g, f, times)
+        g1 = random_graph_with_attrs(N, av_k, f, q[0])
+        g2 = random_graph_with_attrs(N, av_k, f, q[1])
+        g3 = random_graph_with_attrs(N, av_k, f, q[2])
+        g4 = random_graph_with_attrs(N, av_k, f, q[3])
+        pool_agrs = [[g1, f, times], [g2, f, times], [g3, f, times], [g4, f, times]]
         
-        log.info("algorithm for q = %s executed in %s seconds" % (q, round((time.time() - start_time), 4)))
-        g.write_pickle('graph_N='+str(N)+'_q='+str(q)+'_T='+str(times))
-        clusters['s'].append(len(g.clusters()[0]) * 1.0 / N)
-        clusters['q'].append(q)
+        pool = Pool(processes=4)
+        res = pool.map_async(func_star, pool_agrs)
+        pool.close()
+        pool.join()
+        result = res.get()
         
-        plt.plot(x[::1000], y[::1000])
-        plt.title("Network with N = %s nodes, f = %s, q = %s" % (N, f, q))
-        plt.xlabel('time step')
-        plt.ylabel('total number of switches')
-        #plt.show() #plt.savefig("switches_N="+str(N)+"_q="+str(q)+".png", format="png")
-        plt.clf()
+        for j in range(4):
+            g, x, y = result[j]
+            log.info("algorithm for q = %s executed in %s seconds" % (q[j], round((time.time() - start_time), 4)))
+            
+            g.write_pickle('graph_N='+str(N)+'_q='+str(q[j])+'_T='+str(times))
+            clusters['s'].append(len(g.clusters()[0]) * 1.0 / N)
+            clusters['q'].append(q[j])
+            
+            plt.plot(x[::1000], y[::1000])
+            plt.title("Network with N = %s nodes, f = %s, q = %s" % (N, f, q[j]))
+            plt.xlabel('time step')
+            plt.ylabel('total number of switches')
+            plt.savefig("switches_N="+str(N)+"_q="+str(q[j])+".png", format="png")
+            plt.clf()
         log.info("%s percent of algorithm executed" % round((100.0 * (q_list.index(q) + 1.0) / len(q_list)), 1) )
         
     write_clusters_to_file(clusters, name='clusters.txt')
