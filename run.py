@@ -52,7 +52,31 @@ def loop_over_q():
     write_clusters_to_file(clusters, name='clusters.txt')
     return True
 
+def get_largest_component(g):
+    """Returns number of nodes in largest component of graph.
+    Its easy to change this function to return also number of components.
+    @param g: graph to work with
+    @return: largest component of g
+    """
+    return len(g.clusters()[0])
 
+def get_largest_domain(g):
+    """Returns number of nodes in largest domain of graph.
+    Its easy to change this function to return also number of domains.
+    @param g: graph to work with
+    @return: largest domain of g
+    """
+    domains = {}
+    uniq = {}
+    for i, attrs in enumerate(g.vs()["f"]):
+        for key, value in uniq.items():
+            if all(attrs == value):
+                domains[key] += 1
+                break
+        else:
+            uniq[i] = attrs
+            domains[i] = 1
+    return max(domains.values())
 
 def get_average_component_for_q(N, q, T, av_over):
     """This function calls base_algorithm for av_over times
@@ -66,15 +90,15 @@ def get_average_component_for_q(N, q, T, av_over):
     biggest_clusters = []
     biggest_domain = []
     for i in range(av_over):
-        g = random_graph_with_attrs(N, av_k=4.0, f=3, q)
-        g = basic_algorithm(g, f=3, T)
-        biggest_clusters.append(oblicz najw komponent g)
-        biggest_domain.append(oblicz najw domenę g)
+        g = random_graph_with_attrs(N, 4.0, 3, q)
+        g = basic_algorithm(g, 3, T)
+        biggest_clusters.append(get_largest_component(g) * 1.0 / N)
+        biggest_domain.append(get_largest_domain(g) * 1.0 / N)
     return np.sum(biggest_clusters) * 1.0 / av_over, np.sum(biggest_domain) * 1.0 / av_over
 
 if __name__ == "__main__":
     log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
     main_time = time.time()
-    loop_over_q()
+    get_average_component_for_q(100, 200, 10000, 100)
     log.info("main() function executed in %s seconds" % (time.time() - main_time))
 

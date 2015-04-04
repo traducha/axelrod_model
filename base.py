@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import igraph as ig
+import logging as log
 import random
 import numpy as np
 from numpy.random import random as rand
@@ -169,10 +170,6 @@ def func_star(chain):
 
 
 #reading g = ig.Graph.Read_Pickle('name')
-#TODO:
-#def check_clusters_homogenity(g):
-#    a = g.clusters()
-#    return g.clusters()
 """if i > 1000000:
         b = 0
         for sub_list in g.clusters():
