@@ -46,10 +46,10 @@ def switch_connection(g, index, del_index, n, neigs):
     g.add_edges([(index, new_neig)])
     return g
 
-def switch_connection_BA(g, index, del_index, n, edges):
+def switch_connection_while(g, index, del_index, n, neigs):
     g.delete_edges((index, del_index))
     while 1:
-        new_neig = g.get_edgelist()[random.randint(0, edges-1)][random.randint(0, 1)]
+        new_neig = random.randint(0,n-1)
         try:
             g.es.find(_between=((index,), (new_neig,)))
         except ValueError:
@@ -76,7 +76,7 @@ def basic_algorithm(g, f, T):
         m = np.count_nonzero((vertex_attrs == neighbor_attrs))
         #decide what to do according to common attributes
         if m == 0:
-            switch_connection(g, index, neig_index, n, neigs)
+            switch_connection_while(g, index, neig_index, n, neigs)
             switches_sum.append(switches_sum[-1]+1)
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
@@ -91,12 +91,12 @@ def func_star(chain):
     return basic_algorithm(*chain)
 
 def loop_over_q():
-    N = 2500
+    N = 100
     av_k = 4.0
     f = 3
     clusters = {'q': [], 's': []}
-    times = 100000
-    q_list = [[20, 40, 60, 80]]#, [10, 12, 15, 20], [25, 30, 35, 40], [45, 50, 55, 60], [65, 70, 75, 80], [85, 90, 95, 100]] #range(700, 1000, 50) + range(1000, 4000, 200)
+    times = 1000000
+    q_list = [[2, 3, 4, 5], [6, 7, 8, 9]]#, [25, 30, 35, 40], [45, 50, 55, 60], [65, 70, 75, 80], [85, 90, 95, 100]] #range(700, 1000, 50) + range(1000, 4000, 200)
     #q_list += [[110, 120, 150, 200], [250, 300, 350, 400], [450, 500, 550, 600], [310, 320, 330, 340], [360, 370, 380, 390]]
     for q in q_list:
         start_time = time.time()
@@ -128,7 +128,7 @@ def loop_over_q():
             plt.clf()
         log.info("%s percent of algorithm executed" % round((100.0 * (q_list.index(q) + 1.0) / len(q_list)), 1) )
         
-    write_clusters_to_file(clusters, name='clusters.txt')
+    write_clusters_to_file(clusters, name='clusters2.txt')
     return True
 
 if __name__ == "__main__":
