@@ -1,21 +1,25 @@
 #-*- coding: utf-8 -*-
 
-import time
-import logging as log
-from multiprocessing import Pool
 import igraph as ig
 import random
 import numpy as np
 from numpy.random import random as rand
-from matplotlib import pyplot as plt
 
 def write_clusters_to_file(clusters, name):
+    """Old function to write clusters vs. q data to file. Better use pickle.
+    @param clusters: dictionary with two keys
+    @param name: name of file to create
+    """
     file = open(name, 'w')
     file.writelines([str(clusters['q']).replace('[', '').replace(']', ''), '\n', str(clusters['s']).replace('[', '').replace(']', '')])
     file.close()
     return True
 
 def read_clusters_from_file(name):
+    """Old function to read clusters vs. q data from file made in 
+    write_clusters_to_file() function. Better use pickle.
+    @param name: name of file to read from
+    """
     file = open(name, 'r')
     q = file.readline()
     s = file.readline()
@@ -39,14 +43,52 @@ def random_graph_with_attrs(N=2500, av_k=4.0, f=3, q=2):
     return g
 
 def switch_connection(g, index, del_index, n, neigs):
-    """
+    """This function switches connection for given node.
+    For big graphs and relatively small neighborhood function
+    switch_connection_while() is faster.
+    @param g: graph to work on
+    @param index: id of main node
+    @param del_index: id of node to disconnect
+    @param n: number of nodes in g
+    @param neigs: ids of neghbors of index
+    @return: graph g after switch
     """
     g.delete_edges((index, del_index))
     new_neig = random.choice(list(set(range(n)).difference(neigs + [index])))
     g.add_edges([(index, new_neig)])
     return g
 
+def switch_connection_while(g, index, del_index, n, neigs):
+    """This function switches connection for given node
+    without doubling any connection. Every node has the same probability.
+    @param g: graph to work on
+    @param index: id of main node
+    @param del_index: id of node to disconnect
+    @param n: number of nodes in g
+    @param neigs: ids of neghbors of index
+    @return: graph g after switch
+    """
+    g.delete_edges((index, del_index))
+    while 1:
+        new_neig = random.randint(0,n-1)
+        try:
+            g.es.find(_between=((index,), (new_neig,)))
+        except ValueError:
+            break
+    g.add_edges([(index, new_neig)])
+    return g
+
 def switch_connection_BA(g, index, del_index, n, edges):
+    """This function switches connection for given node
+    without doubling any connection. Probability is proportional
+    to degree of a node.
+    @param g: graph to work on
+    @param index: id of main node
+    @param del_index: id of node to disconnect
+    @param n: number of nodes in g
+    @param edges: number of edges in g
+    @return: graph g after switch
+    """
     g.delete_edges((index, del_index))
     while 1:
         new_neig = g.get_edgelist()[random.randint(0, edges-1)][random.randint(0, 1)]
@@ -58,7 +100,41 @@ def switch_connection_BA(g, index, del_index, n, edges):
     return g
 
 def basic_algorithm(g, f, T):
+    """This is the basic algorithm of coevolving network.
+    @param g: graph to work on
+    @param f: number of attributes of nodes
+    @param T: number of time steps
+    @return: g after applying algorithm
     """
+    n = len(g.vs())
+    for i in range(T):
+        #get one node and randomly select one of it's neighbors
+        index = int(rand()*n)
+        neigs = g.neighbors(index)
+        if not neigs:
+            continue
+        neig_index = random.choice(neigs)
+        #compare attributes of two nodes
+        vertex_attrs = g.vs(index)["f"][0]
+        neighbor_attrs = g.vs(neig_index)["f"][0]
+        m = np.count_nonzero((vertex_attrs == neighbor_attrs))
+        #decide what to do according to common attributes
+        if m == 0:
+            switch_connection_while(g, index, neig_index, n, neigs)
+        elif m != f and rand() < m*1.0/f:
+            change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
+            vertex_attrs[change_attr] = neighbor_attrs[change_attr]
+    return g
+
+def basic_algorithm_count_switches(g, f, T):
+    """Copy of basic algorithm which counts number of switches
+    from the beginning of simulation. Separated from basic_algorithm()
+    to keep speed of that function.
+    @param g: graph to work on
+    @param f: number of attributes of nodes
+    @param T: number of time steps
+    @return (graph, list, list): g after applying algorithm,
+    list with number of time steps, list with sum of switches from the beginning
     """
     n = len(g.vs())
     switches_sum = [0]
@@ -76,7 +152,7 @@ def basic_algorithm(g, f, T):
         m = np.count_nonzero((vertex_attrs == neighbor_attrs))
         #decide what to do according to common attributes
         if m == 0:
-            switch_connection(g, index, neig_index, n, neigs)
+            switch_connection_while(g, index, neig_index, n, neigs)
             switches_sum.append(switches_sum[-1]+1)
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
@@ -87,58 +163,12 @@ def basic_algorithm(g, f, T):
     return g, range(T+1), switches_sum
 
 def func_star(chain):
-    """Convert `f([1,2])` to `f(1,2)` call."""
-    return basic_algorithm(*chain)
-
-def loop_over_q():
-    N = 2500
-    av_k = 4.0
-    f = 3
-    clusters = {'q': [], 's': []}
-    times = 100000
-    q_list = [[20, 40, 60, 80]]#, [10, 12, 15, 20], [25, 30, 35, 40], [45, 50, 55, 60], [65, 70, 75, 80], [85, 90, 95, 100]] #range(700, 1000, 50) + range(1000, 4000, 200)
-    #q_list += [[110, 120, 150, 200], [250, 300, 350, 400], [450, 500, 550, 600], [310, 320, 330, 340], [360, 370, 380, 390]]
-    for q in q_list:
-        start_time = time.time()
-        g1 = random_graph_with_attrs(N, av_k, f, q[0])
-        g2 = random_graph_with_attrs(N, av_k, f, q[1])
-        g3 = random_graph_with_attrs(N, av_k, f, q[2])
-        g4 = random_graph_with_attrs(N, av_k, f, q[3])
-        pool_agrs = [[g1, f, times], [g2, f, times], [g3, f, times], [g4, f, times]]
-        
-        pool = Pool(processes=4)
-        res = pool.map_async(func_star, pool_agrs)
-        pool.close()
-        pool.join()
-        result = res.get()
-        
-        for j in range(4):
-            g, x, y = result[j]
-            log.info("algorithm for q = %s executed in %s seconds" % (q[j], round((time.time() - start_time), 4)))
-            
-            g.write_pickle('graph_N='+str(N)+'_q='+str(q[j])+'_T='+str(times))
-            clusters['s'].append(len(g.clusters()[0]) * 1.0 / N)
-            clusters['q'].append(q[j])
-            
-            plt.plot(x[::1000], y[::1000])
-            plt.title("Network with N = %s nodes, f = %s, q = %s" % (N, f, q[j]))
-            plt.xlabel('time step')
-            plt.ylabel('total number of switches')
-            plt.savefig("switches_N="+str(N)+"_q="+str(q[j])+".png", format="png")
-            plt.clf()
-        log.info("%s percent of algorithm executed" % round((100.0 * (q_list.index(q) + 1.0) / len(q_list)), 1) )
-        
-    write_clusters_to_file(clusters, name='clusters.txt')
-    return True
-
-if __name__ == "__main__":
-    log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-    main_time = time.time()
-    loop_over_q()
-    log.info("main() function executed in %s seconds" % (time.time() - main_time))
+    """Converts `f([1,2])` to `f(1,2)` call.
+    It's necessary when using Pool.map_async() function"""
+    return basic_algorithm_count_switches(*chain)
 
 
-#reading g = ig.Graph.Read_Pickle('dupa')
+#reading g = ig.Graph.Read_Pickle('name')
 #TODO:
 #def check_clusters_homogenity(g):
 #    a = g.clusters()
