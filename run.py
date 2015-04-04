@@ -52,53 +52,42 @@ def loop_over_q():
     write_clusters_to_file(clusters, name='clusters.txt')
     return True
 
-def get_largest_component(g):
-    """Returns number of nodes in largest component of graph.
-    Its easy to change this function to return also number of components.
-    @param g: graph to work with
-    @return: largest component of g
+def plot_sd_vs_q(name):
+    """Use in interacive mode to plot results.
+    @param name: name of file with data
     """
-    return len(g.clusters()[0])
+    r = read_object_from_file(name)
+    plt.scatter(r['q'], r['s'])
+    plt.scatter(r['q'], r['d'])
+    plt.xscale('log')
+    plt.show()
+    return True
 
-def get_largest_domain(g):
-    """Returns number of nodes in largest domain of graph.
-    Its easy to change this function to return also number of domains.
-    @param g: graph to work with
-    @return: largest domain of g
-    """
-    domains = {}
-    uniq = {}
-    for i, attrs in enumerate(g.vs()["f"]):
-        for key, value in uniq.items():
-            if all(attrs == value):
-                domains[key] += 1
-                break
-        else:
-            uniq[i] = attrs
-            domains[i] = 1
-    return max(domains.values())
-
-def get_average_component_for_q(N, q, T, av_over):
-    """This function calls base_algorithm for av_over times
-    and computes average largest component and domain.
+def get_data_for_qsd(N, T, av_over_q, processes):
+    """Function with loop over q to get data for plots.
     @param N: number of nodes in graph
-    @param q: number of possible values of node's attributes
-    @param T: number of time steps for base_algorithm
-    @param av_over: number of base_algorithm executions
-    @return: average largest component and domain
+    @param T: number of time steps in base algorithm
+    @param av_over_q: number of repetitions for one q
+    @param processes: number of parallel processes
+    @return dict: dictionary with lists of q, components and domains
     """
-    biggest_clusters = []
-    biggest_domain = []
-    for i in range(av_over):
-        g = random_graph_with_attrs(N, 4.0, 3, q)
-        g = basic_algorithm(g, 3, T)
-        biggest_clusters.append(get_largest_component(g) * 1.0 / N)
-        biggest_domain.append(get_largest_domain(g) * 1.0 / N)
-    return np.sum(biggest_clusters) * 1.0 / av_over, np.sum(biggest_domain) * 1.0 / av_over
+    res = {'q': [], 's': [], 'd': []}
+    q_list = range(2,10) + range(10,20,2) + range(20,40,4) + range(40,100,5) + range(100,1000,50)
+    for q in q_list:
+        start_time = time.time()
+        comp, dom = get_average_component_for_q(N, q, T, av_over_q, processes=processes)
+        res['q'].append(q)
+        res['s'].append(comp)
+        res['d'].append(dom)
+        log.info("computing components and domains for q = %s finished in %s minutes" % (q, round((time.time()-start_time)/60.0, 2)))
+    return res
 
 if __name__ == "__main__":
     log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
     main_time = time.time()
-    get_average_component_for_q(100, 200, 10000, 100)
-    log.info("main() function executed in %s seconds" % (time.time() - main_time))
+    N = 100
+    av_q = 100
+    res = get_data_for_qsd(N, 100, av_q, processes=4)
+    write_object_to_file(res, '/home/tomaszraducha/workspace/res_N='+str(N)+'_q_times_'+str(av_q)+'.data')
+    log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
 

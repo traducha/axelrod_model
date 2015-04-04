@@ -5,6 +5,8 @@ import logging as log
 import random
 import numpy as np
 from numpy.random import random as rand
+from multiprocessing import Pool
+import pickle
 
 def write_clusters_to_file(clusters, name):
     """Old function to write clusters vs. q data to file. Better use pickle.
@@ -29,6 +31,26 @@ def read_clusters_from_file(name):
     s = [float(i) for i in s.split(', ')]
     return {'q': q, 's': s}
 
+def write_object_to_file(obj, name):
+    """Writing objects to file.
+    @param obj: object to write
+    @param name: name of file to open/create and write into
+    """
+    f = open(name, 'wb')
+    pickle.dump(obj, f)
+    f.close()
+    return True
+
+def read_object_from_file(name):
+    """Reading objects from files.
+    @param name: name of the file
+    @return: object that was in file
+    """
+    f = open(name, 'rb')
+    res = pickle.load(f)
+    f.close()
+    return res
+
 def random_graph_with_attrs(N=2500, av_k=4.0, f=3, q=2):
     """Creating random graph and generating random attributes.
     @param N: number of nodes in the graph
@@ -40,8 +62,34 @@ def random_graph_with_attrs(N=2500, av_k=4.0, f=3, q=2):
     p = av_k / (N - 1.0)
     g = ig.Graph.Erdos_Renyi(N, p)
     g.vs()["f"] = np.int_(rand((N, f))*q)
-    log.info("initial average degree was: k = %s" % (np.sum(g.degree()) * 1.0 / N))
+    #log.info("initial average degree was: k = %s" % (np.sum(g.degree()) * 1.0 / N))
     return g
+
+def get_largest_component(g):
+    """Returns number of nodes in largest component of graph.
+    Its easy to change this function to return also number of components.
+    @param g: graph to work with
+    @return: largest component of g
+    """
+    return len(g.clusters()[0])
+
+def get_largest_domain(g):
+    """Returns number of nodes in largest domain of graph.
+    Its easy to change this function to return also number of domains.
+    @param g: graph to work with
+    @return: largest domain of g
+    """
+    domains = {}
+    uniq = {}
+    for i, attrs in enumerate(g.vs()["f"]):
+        for key, value in uniq.items():
+            if all(attrs == value):
+                domains[key] += 1
+                break
+        else:
+            uniq[i] = attrs
+            domains[i] = 1
+    return max(domains.values())
 
 def switch_connection(g, index, del_index, n, neigs):
     """This function switches connection for given node.
@@ -168,24 +216,33 @@ def func_star(chain):
     It's necessary when using Pool.map_async() function"""
     return basic_algorithm_count_switches(*chain)
 
+def get_average_component_for_q(N, q, T, av_over, processes):
+    """This function calls base_algorithm for av_over times
+    and computes average largest component and domain.
+    @param N: number of nodes in graph
+    @param q: number of possible values of node's attributes
+    @param T: number of time steps for base_algorithm
+    @param av_over: number of base_algorithm executions
+    @param processes: number of parallel processes
+    @return (float, float): average largest component and domain
+    """
+    biggest_clusters = []
+    biggest_domain = []
+    
+    def append_result(res):
+        """""This function is called from the main process
+        to append results to lists."""
+        biggest_clusters.append(get_largest_component(res) * 1.0 / N)
+        biggest_domain.append(get_largest_domain(res) * 1.0 / N)
+        return True
+    
+    pool = Pool(processes=processes)
+    for i in range(av_over):
+        g = random_graph_with_attrs(N, 4.0, 3, q)
+        pool.apply_async(basic_algorithm, args=(g, 3, T), callback=append_result)
+    pool.close()
+    pool.join()
+    pool.terminate()
+    return np.sum(biggest_clusters) * 1.0 / av_over, np.sum(biggest_domain) * 1.0 / av_over
 
 #reading g = ig.Graph.Read_Pickle('name')
-"""if i > 1000000:
-        b = 0
-        for sub_list in g.clusters():
-            stop = 1
-            sub = g.induced_subgraph(sub_list)
-            attrs = sub.vs()["f"]
-            for d in range(len(attrs)-1):
-                if not all(attrs[d] == attrs[d+1]):
-                    print "NOT"
-                    stop = 0
-                    break
-            if stop:
-                print "OK"
-                b = 1
-            else:
-                break
-        if b:
-            print i
-            break"""
