@@ -13,13 +13,15 @@ def loop_over_q():
     to run 4 processes at once. It plots switches in time, writes graphs to file
     and writes clusters vs. q to file.
     """
+    log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
     switch_function = switch_connection_BA
     N = 500
     av_k = 4.0
     f = 3
     clusters = {'q': [], 's': []}
-    times = 2000000
-    q_list = []
+    times = 3000000
+    q_list = [3] + [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))][::3] + [1300, 9000]
+    q_list = [(q_list[i], q_list[i+1], q_list[i+2], q_list[i+3]) for i in range(0, len(q_list), 4)]
     for q in q_list:
         start_time = time.time()
         g1 = random_graph_with_attrs(N, av_k, f, q[0])
@@ -38,7 +40,7 @@ def loop_over_q():
             g, x, y = result[j]
             log.info("algorithm for q = %s executed in %s seconds" % (q[j], round((time.time() - start_time), 4)))
             
-            g.write_pickle('graph_N='+str(N)+'_q='+str(q[j])+'_T='+str(times))
+            g.write_pickle('OUT/graph_N='+str(N)+'_q='+str(q[j])+'_T='+str(times))
             clusters['s'].append(len(g.clusters()[0]) * 1.0 / N)
             clusters['q'].append(q[j])
             
@@ -46,11 +48,11 @@ def loop_over_q():
             plt.title("Network with N = %s nodes, f = %s, q = %s" % (N, f, q[j]))
             plt.xlabel('time step')
             plt.ylabel('total number of switches')
-            plt.savefig("switches_N="+str(N)+"_q="+str(q[j])+".png", format="png")
+            plt.savefig("OUT/switches_N="+str(N)+"_q="+str(q[j])+".png", format="png")
             plt.clf()
         log.info("%s percent of algorithm executed" % round((100.0 * (q_list.index(q) + 1.0) / len(q_list)), 1) )
         
-    write_clusters_to_file(clusters, name='clusters.txt')
+    write_clusters_to_file(clusters, name='OUT/clusters.txt')
     return True
 
 def plot_sd_vs_q(name):

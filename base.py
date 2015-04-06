@@ -153,7 +153,7 @@ def switch_function():
     raise Exception("Function 'switch_fuction' has to be overwrite by one of real switching functions.\n" +
                     "Set 'switch_function = switch_connection_while' for example")
     return False
-switch_function = switch_connection_while
+switch_function = switch_connection_BA
 
 def basic_algorithm(g, f, T):
     """This is the basic algorithm of coevolving network.
