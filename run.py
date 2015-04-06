@@ -4,6 +4,7 @@ import time
 from matplotlib import pyplot as plt
 import logging as log
 from multiprocessing import Pool
+import sys
 from base import *
 
 def loop_over_q():
@@ -12,13 +13,13 @@ def loop_over_q():
     to run 4 processes at once. It plots switches in time, writes graphs to file
     and writes clusters vs. q to file.
     """
+    switch_function = switch_connection_BA
     N = 500
     av_k = 4.0
     f = 3
     clusters = {'q': [], 's': []}
-    times = 1000000
-    q_list = [[20, 40, 60, 80]]#, [10, 12, 15, 20], [25, 30, 35, 40], [45, 50, 55, 60], [65, 70, 75, 80], [85, 90, 95, 100]] #range(700, 1000, 50) + range(1000, 4000, 200)
-    #q_list += [[110, 120, 150, 200], [250, 300, 350, 400], [450, 500, 550, 600], [310, 320, 330, 340], [360, 370, 380, 390]]
+    times = 2000000
+    q_list = []
     for q in q_list:
         start_time = time.time()
         g1 = random_graph_with_attrs(N, av_k, f, q[0])
@@ -57,37 +58,69 @@ def plot_sd_vs_q(name):
     @param name: name of file with data
     """
     r = read_object_from_file(name)
-    plt.scatter(r['q'], r['s'])
-    plt.scatter(r['q'], r['d'])
+    plt.scatter(r['q'], r['s'], color='blue')
+    plt.scatter(r['q'], r['d'], color='red')
+    plt.xlim([1, 10000])
+    plt.ylim([0, 1])
     plt.xscale('log')
     plt.show()
     return True
 
-def get_data_for_qsd(N, T, av_over_q, processes):
+def get_data_for_qsd(N, T, av_over_q, q_list, processes):
     """Function with loop over q to get data for plots.
     @param N: number of nodes in graph
     @param T: number of time steps in base algorithm
     @param av_over_q: number of repetitions for one q
+    @param q_list: list of q's values to iterate over
     @param processes: number of parallel processes
     @return dict: dictionary with lists of q, components and domains
     """
+    q_list.sort()
     res = {'q': [], 's': [], 'd': []}
-    q_list = range(2,10) + range(10,20,2) + range(20,40,4) + range(40,100,5) + range(100,1000,50)
     for q in q_list:
         start_time = time.time()
-        comp, dom = get_average_component_for_q(N, q, T, av_over_q, processes=processes)
+        comp, dom = get_component(N, q, T, av_over_q, processes=processes)
         res['q'].append(q)
         res['s'].append(comp)
         res['d'].append(dom)
         log.info("computing components and domains for q = %s finished in %s minutes" % (q, round((time.time()-start_time)/60.0, 2)))
     return res
 
-if __name__ == "__main__":
+def main():
     log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-    main_time = time.time()
-    N = 100
+    
+    if '-p' in sys.argv:
+        processes = int(sys.argv[sys.argv.index('-p')+1])
+    else:
+        processes = 1
+        
+    if processes == 1:
+        get_component = get_average_component_for_q
+    else:
+        get_component = get_average_component_for_q_multi
+    
+    if '-m' in sys.argv:
+        mode = sys.argv[sys.argv.index('-m')+1]
+        if mode == 'BA':
+            switch_function = switch_connection_BA
+        else:
+            switch_function = switch_connection_while
+    else:
+        mode = 'normal'
+        switch_function = switch_connection_while
+    
+    N = 500
     av_q = 100
-    res = get_data_for_qsd(N, 100, av_q, processes=4)
-    write_object_to_file(res, '/home/tomaszraducha/workspace/res_N='+str(N)+'_q_times_'+str(av_q)+'.data')
+    T = 1200000
+    
+    main_time = time.time()
+    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
+    res = get_data_for_qsd(N, T, av_q, q_list, processes=processes)
+    write_object_to_file(res, 'res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
     log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
+    return
 
+if __name__ == "__main__":
+    #main()
+    loop_over_q()
+    

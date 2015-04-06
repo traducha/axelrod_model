@@ -114,20 +114,18 @@ def switch_connection_while(g, index, del_index, n, neigs):
     @param index: id of main node
     @param del_index: id of node to disconnect
     @param n: number of nodes in g
-    @param neigs: ids of neghbors of index
+    @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
     g.delete_edges((index, del_index))
     while 1:
         new_neig = random.randint(0,n-1)
-        try:
-            g.es.find(_between=((index,), (new_neig,)))
-        except ValueError:
+        if new_neig not in neigs and new_neig != index:
             break
     g.add_edges([(index, new_neig)])
     return g
 
-def switch_connection_BA(g, index, del_index, n, edges):
+def switch_connection_BA(g, index, del_index, n, neigs):
     """This function switches connection for given node
     without doubling any connection. Probability is proportional
     to degree of a node.
@@ -135,18 +133,27 @@ def switch_connection_BA(g, index, del_index, n, edges):
     @param index: id of main node
     @param del_index: id of node to disconnect
     @param n: number of nodes in g
-    @param edges: number of edges in g
+    @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
     g.delete_edges((index, del_index))
+    edges = len(g.get_edgelist()) #TODO: what is faster: g.es() or g.get_edgelist()?
     while 1:
         new_neig = g.get_edgelist()[random.randint(0, edges-1)][random.randint(0, 1)]
-        try:
-            g.es.find(_between=((index,), (new_neig,)))
-        except ValueError:
+        if new_neig not in neigs and new_neig != index:
             break
     g.add_edges([(index, new_neig)])
     return g
+
+def switch_function():
+    """This function has to be overwrite to put in base_algorithm()
+    proper function for switches. Idea of this function is
+    to avoid unnecessary if/else in loop.
+    """
+    raise Exception("Function 'switch_fuction' has to be overwrite by one of real switching functions.\n" +
+                    "Set 'switch_function = switch_connection_while' for example")
+    return False
+switch_function = switch_connection_while
 
 def basic_algorithm(g, f, T):
     """This is the basic algorithm of coevolving network.
@@ -169,7 +176,7 @@ def basic_algorithm(g, f, T):
         m = np.count_nonzero((vertex_attrs == neighbor_attrs))
         #decide what to do according to common attributes
         if m == 0:
-            switch_connection_while(g, index, neig_index, n, neigs)
+            switch_function(g, index, neig_index, n, neigs)
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
             vertex_attrs[change_attr] = neighbor_attrs[change_attr]
@@ -201,7 +208,7 @@ def basic_algorithm_count_switches(g, f, T):
         m = np.count_nonzero((vertex_attrs == neighbor_attrs))
         #decide what to do according to common attributes
         if m == 0:
-            switch_connection_while(g, index, neig_index, n, neigs)
+            switch_function(g, index, neig_index, n, neigs)
             switches_sum.append(switches_sum[-1]+1)
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
@@ -216,9 +223,29 @@ def func_star(chain):
     It's necessary when using Pool.map_async() function"""
     return basic_algorithm_count_switches(*chain)
 
-def get_average_component_for_q(N, q, T, av_over, processes):
+def get_average_component_for_q(N, q, T, av_over, processes=1):
     """This function calls base_algorithm for av_over times
     and computes average largest component and domain.
+    @param N: number of nodes in graph
+    @param q: number of possible values of node's attributes
+    @param T: number of time steps for base_algorithm
+    @param av_over: number of base_algorithm executions
+    @param processes: does't matter here
+    @return (float, float): average largest component and domain
+    """
+    biggest_clusters = []
+    biggest_domain = []
+    for i in range(av_over):
+        g = random_graph_with_attrs(N, 4.0, 3, q)
+        g = basic_algorithm(g, 3, T)
+        biggest_clusters.append(get_largest_component(g) * 1.0 / N)
+        biggest_domain.append(get_largest_domain(g) * 1.0 / N)
+    return np.sum(biggest_clusters) * 1.0 / av_over, np.sum(biggest_domain) * 1.0 / av_over
+
+def get_average_component_for_q_multi(N, q, T, av_over, processes):
+    """This function calls base_algorithm for av_over times
+    and computes average largest component and domain. It uses multiprocessing
+    for spawning child processes.
     @param N: number of nodes in graph
     @param q: number of possible values of node's attributes
     @param T: number of time steps for base_algorithm
