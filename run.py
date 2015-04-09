@@ -14,26 +14,25 @@ def loop_over_q():
     and writes clusters vs. q to file.
     """
     log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-    switch_function = switch_connection_BA
     N = 500
-    av_k = 4.0
-    f = 3
+    Sim = AxSimulation(mode=2, av_k=4.0, f=3)
     clusters = {'q': [], 's': []}
     times = 20000000
     q_list = [3] + [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))][::3] + [1300, 9000]
     q_list = [(q_list[i], q_list[i+1], q_list[i+2], q_list[i+3]) for i in range(0, len(q_list), 4)]
     for q in q_list:
         start_time = time.time()
-        g1 = random_graph_with_attrs(N, av_k, f, q[0])
-        g2 = random_graph_with_attrs(N, av_k, f, q[1])
-        g3 = random_graph_with_attrs(N, av_k, f, q[2])
-        g4 = random_graph_with_attrs(N, av_k, f, q[3])
-        pool_agrs = [[g1, f, times], [g2, f, times], [g3, f, times], [g4, f, times]]
+        g1 = AxGraph.random_graph_with_attrs(N, Sim.av_k, Sim.f, q[0])
+        g2 = AxGraph.random_graph_with_attrs(N, Sim.av_k, Sim.f, q[1])
+        g3 = AxGraph.random_graph_with_attrs(N, Sim.av_k, Sim.f, q[2])
+        g4 = AxGraph.random_graph_with_attrs(N, Sim.av_k, Sim.f, q[3])
+        pool_agrs = [[g1, times], [g2, times], [g3, times], [g4, times]]
         
         pool = Pool(processes=4)
-        res = pool.map_async(func_star, pool_agrs)
+        res = pool.map_async(Sim.func_star, pool_agrs)
         pool.close()
         pool.join()
+        pool.terminate()
         result = res.get()
         
         for j in range(4):
@@ -45,7 +44,7 @@ def loop_over_q():
             clusters['q'].append(q[j])
             
             plt.plot(x[::1000], y[::1000])
-            plt.title("Network with N = %s nodes, f = %s, q = %s" % (N, f, q[j]))
+            plt.title("Network with N = %s nodes, f = %s, q = %s" % (N, Sim.f, q[j]))
             plt.xlabel('time step')
             plt.ylabel('total number of switches')
             plt.savefig("OUT/switches_N="+str(N)+"_q="+str(q[j])+".png", format="png")
@@ -76,14 +75,15 @@ def watch_one_graph(g, T):
     @return: dictionary with lists to plot
     """
     N = len(g.vs())
+    Sim = AxSimulation(2, 4.0, 3)
     res = {'t': [], 's': [], 'd': []}
     for t in range(T):
-        g = basic_algorithm(g, 3, 1)
+        g = Sim.basic_algorithm(g, 1)
         if t % 100000 == 0:
             res['t'].append(t)
-            res['s'].append(get_largest_component(g) * 1.0 / N)
-            res['d'].append(get_largest_domain(g) * 1.0 / N)
-            print t, is_switch_possible(g)
+            res['s'].append(g.get_largest_component() * 1.0 / N)
+            res['d'].append(g.get_largest_domain() * 1.0 / N)
+            print t, g.is_switch_possible()
     write_object_to_file(res, 'play_in_time_N='+str(N)+'.data')
     plt.plot(res['t'], res['s'], color='blue')
     #plt.plot(res['t'], res['d'], color='red')
@@ -93,20 +93,20 @@ def watch_one_graph(g, T):
     plt.savefig('play_in_time_N='+str(N)+'.png', format="png")
     return res
 
-def get_data_for_qsd(N, T, av_over_q, q_list, processes):
+def get_data_for_qsd(N, T, av_over_q, q_list, simulation):
     """Function with loop over q to get data for plots.
     @param N: number of nodes in graph
     @param T: number of time steps in base algorithm
     @param av_over_q: number of repetitions for one q
     @param q_list: list of q's values to iterate over
-    @param processes: number of parallel processes
+    @param simulation: instance of AxSimulation
     @return dict: dictionary with lists of q, components and domains
     """
     q_list.sort()
     res = {'q': [], 's': [], 'd': []}
     for q in q_list:
         start_time = time.time()
-        comp, dom = get_component(N, q, T, av_over_q, processes=processes)
+        comp, dom = simulation.get_comp_dom(N, q, T, av_over_q)
         res['q'].append(q)
         res['s'].append(comp)
         res['d'].append(dom)
@@ -119,30 +119,21 @@ def main():
     if '-p' in sys.argv:
         processes = int(sys.argv[sys.argv.index('-p')+1])
     else:
-        processes = 1
-        
-    if processes == 1:
-        get_component = get_average_component_for_q
-    else:
-        get_component = get_average_component_for_q_multi
+        raise Exception("Use switch '-p' to define number of processes")
     
     if '-m' in sys.argv:
         mode = sys.argv[sys.argv.index('-m')+1]
-        if mode == 'BA':
-            switch_function = switch_connection_BA
-        else:
-            switch_function = switch_connection_while
     else:
-        mode = 'normal'
-        switch_function = switch_connection_while
+        raise Exception("Use switch '-m' to define mode of simulation")
     
     N = 500
     av_q = 100
     T = 1200000
+    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
+    simulation = AxSimulation(mode, 4.0, 3, processes)
     
     main_time = time.time()
-    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
-    res = get_data_for_qsd(N, T, av_q, q_list, processes=processes)
+    res = get_data_for_qsd(N, T, av_q, q_list, simulation)
     write_object_to_file(res, 'res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
     log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
     return
@@ -151,7 +142,7 @@ if __name__ == "__main__":
     #main()
     #loop_over_q()
     g = read_graph_from_file('OUT/graph_N=500_q=243_T=20000000')
-    print is_static(g)
-    print is_switch_possible(g)
+    print g.is_static()
+    print g.is_switch_possible()
     watch_one_graph(g, 10000000)
     

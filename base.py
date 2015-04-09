@@ -157,11 +157,12 @@ class AxSimulation():
     several processes to speed up a bit.
     """
     
-    def __init__(self, mode, av_k, f):
+    def __init__(self, mode, av_k, f, processes):
         """Set up parameters for simulation.
         @param mode: mode of simulation, switching behavior depends on it
         @param av_k: average degree of nodes
         @param f: number of attributes (every attribute can have q different values)
+        @param processes: number of parallel processes to spawn
         """
         if mode in ['normal', 'random', 1]:
             self.switch_function = self.switch_connection_while
@@ -176,9 +177,19 @@ class AxSimulation():
         if not isinstance(f, int):
             raise TypeError("Third argument of AxSimulation have to be int! %s was given." % type(f))
         
+        if not isinstance(processes, int):
+            raise TypeError("Fourth argument of AxSimulation have to be int! %s was given." % type(f))
+        if processes < 1:
+            raise ValueError("Number of processes must be grater than zero! %s was given." % processes)
+        elif processes == 1:
+            self.get_comp_dom = self.get_average_component_for_q
+        else:
+            self.get_comp_dom = self.get_average_component_for_q_multi
+        
         self.mode = mode
         self.av_k = av_k
         self.f = f
+        self.processes = processes
 
     def switch_connection(self, g, index, del_index, n, neigs):
         """This method switches connection for given node.
@@ -301,15 +312,13 @@ class AxSimulation():
         It's necessary when using Pool.map_async() function"""
         return self.basic_algorithm_count_switches(*chain)
 
-    def get_average_component_for_q(self, N, q, T, av_over, processes=1):
+    def get_average_component_for_q(self, N, q, T, av_over):
         """This method calls base_algorithm for av_over times
         and computes average largest component and domain.
         @param N: number of nodes in graph
         @param q: number of possible values of node's attributes
         @param T: number of time steps for base_algorithm
         @param av_over: number of base_algorithm executions
-        @param processes: does't matter here,
-        left to call the same way as get_average_component_for_q_multi
         @return (float, float): average largest component and domain
         """
         biggest_clusters = []
@@ -321,7 +330,7 @@ class AxSimulation():
             biggest_domain.append(g.get_largest_domain() * 1.0 / N)
         return np.sum(biggest_clusters) * 1.0 / av_over, np.sum(biggest_domain) * 1.0 / av_over
 
-    def get_average_component_for_q_multi(self, N, q, T, av_over, processes):
+    def get_average_component_for_q_multi(self, N, q, T, av_over):
         """This method calls base_algorithm for av_over times
         and computes average largest component and domain. It uses multiprocessing
         for spawning child processes.
@@ -329,7 +338,6 @@ class AxSimulation():
         @param q: number of possible values of node's attributes
         @param T: number of time steps for base_algorithm
         @param av_over: number of base_algorithm executions
-        @param processes: number of parallel processes
         @return (float, float): average largest component and domain
         """
         biggest_clusters = []
@@ -344,7 +352,7 @@ class AxSimulation():
             biggest_domain.append(res_g.get_largest_domain() * 1.0 / N)
             return True
         
-        pool = Pool(processes=processes)
+        pool = Pool(processes=self.processes)
         for i in range(av_over):
             g = AxGraph.random_graph_with_attrs(N, self.av_k, self.f, q)
             pool.apply_async(self.basic_algorithm, args=(g, T), callback=append_result)
