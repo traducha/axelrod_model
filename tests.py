@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import time
-import igraph as ig
+from base import *
 import random
 import numpy as np
 from numpy.random import random as rand
@@ -9,22 +9,31 @@ from matplotlib import pyplot as plt
 
 
 
-times = 50
+
+times = 5000
 #### Checking first time of execution###
 
 start_time = time.time()
 for i in range(times):
-    import base2
+    ############################
+    
+    g = AxGraph.random_graph_with_attrs(500, 4, 3, 30)
+    x = g.get_edgelist()
+    
     ############################
 total1 = time.time() - start_time
 
-############### Checking second time of execution #############
 
 
+############### Checking second time of execution ############
 
 start_time = time.time()
 for i in range(times):
-    import base
+    #############################
+    
+    g = AxGraph.random_graph_with_attrs(500, 4, 3, 30)
+    x = g.es()
+    
     #############################
 total2 = time.time() - start_time
 

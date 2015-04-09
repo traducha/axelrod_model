@@ -19,7 +19,7 @@ def loop_over_q():
     av_k = 4.0
     f = 3
     clusters = {'q': [], 's': []}
-    times = 3000000
+    times = 20000000
     q_list = [3] + [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))][::3] + [1300, 9000]
     q_list = [(q_list[i], q_list[i+1], q_list[i+2], q_list[i+3]) for i in range(0, len(q_list), 4)]
     for q in q_list:
@@ -67,6 +67,31 @@ def plot_sd_vs_q(name):
     plt.xscale('log')
     plt.show()
     return True
+
+def watch_one_graph(g, T):
+    """This function runs simulation for one graph
+    and saves largest component and domain for every time step.
+    @param g: graph to start with
+    @param T: number of time steps
+    @return: dictionary with lists to plot
+    """
+    N = len(g.vs())
+    res = {'t': [], 's': [], 'd': []}
+    for t in range(T):
+        g = basic_algorithm(g, 3, 1)
+        if t % 100000 == 0:
+            res['t'].append(t)
+            res['s'].append(get_largest_component(g) * 1.0 / N)
+            res['d'].append(get_largest_domain(g) * 1.0 / N)
+            print t, is_switch_possible(g)
+    write_object_to_file(res, 'play_in_time_N='+str(N)+'.data')
+    plt.plot(res['t'], res['s'], color='blue')
+    #plt.plot(res['t'], res['d'], color='red')
+    plt.title("Largest component and domain in time, N = %s" % N)
+    plt.xlabel('time step')
+    plt.ylabel('largest component/domain')
+    plt.savefig('play_in_time_N='+str(N)+'.png', format="png")
+    return res
 
 def get_data_for_qsd(N, T, av_over_q, q_list, processes):
     """Function with loop over q to get data for plots.
@@ -124,5 +149,9 @@ def main():
 
 if __name__ == "__main__":
     #main()
-    loop_over_q()
+    #loop_over_q()
+    g = read_graph_from_file('OUT/graph_N=500_q=243_T=20000000')
+    print is_static(g)
+    print is_switch_possible(g)
+    watch_one_graph(g, 10000000)
     
