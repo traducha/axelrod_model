@@ -93,56 +93,64 @@ def watch_one_graph(g, T):
     plt.savefig('play_in_time_N='+str(N)+'.png', format="png")
     return res
 
-def get_data_for_qsd(N, T, av_over_q, q_list, simulation):
-    """Function with loop over q to get data for plots.
-    @param N: number of nodes in graph
-    @param T: number of time steps in base algorithm
-    @param av_over_q: number of repetitions for one q
-    @param q_list: list of q's values to iterate over
-    @param simulation: instance of AxSimulation
-    @return dict: dictionary with lists of q, components and domains
-    """
-    q_list.sort()
-    res = {'q': [], 's': [], 'd': []}
-    for q in q_list:
-        start_time = time.time()
-        comp, dom = simulation.get_comp_dom(N, q, T, av_over_q)
-        res['q'].append(q)
-        res['s'].append(comp)
-        res['d'].append(dom)
-        log.info("computing components and domains for q = %s finished in %s minutes" % (q, round((time.time()-start_time)/60.0, 2)))
-    return res
-
-def main():
+def main(N=500, av_q=20, T=1000000):
     log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-    
+    # read initial arguments
     if '-p' in sys.argv:
         processes = int(sys.argv[sys.argv.index('-p')+1])
+        log.info("%s child processes will be spawn" % processes)
     else:
         raise Exception("Use switch '-p' to define number of processes")
     
     if '-m' in sys.argv:
         mode = sys.argv[sys.argv.index('-m')+1]
+        log.info("mode of simulation is: %s" % mode)
     else:
         raise Exception("Use switch '-m' to define mode of simulation")
     
-    N = 500
-    av_q = 100
-    T = 1200000
+    if '--rest' in sys.argv:
+        rest = sys.argv[sys.argv.index('--rest')+1]
+        rest = [float(i) for i in rest.split('-')]
+        log.info("rest mode is: %s" % rest)
+    else:
+        rest = []
+    # set simulation parameters
     q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
-    simulation = AxSimulation(mode, 4.0, 3, processes)
-    
+    simulation = AxSimulation(mode, 4.0, 3, processes, rest)
+    # run simulation and save results
     main_time = time.time()
-    res = get_data_for_qsd(N, T, av_q, q_list, simulation)
-    write_object_to_file(res, 'res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
+    res = simulation.get_data_for_qsd(N, T, av_q, q_list)
+    write_object_to_file(res, 'OUT/res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
     log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
     return
 
 if __name__ == "__main__":
-    #main()
+    main(N=500, av_q=4, T=200000)
     #loop_over_q()
-    g = read_graph_from_file('OUT/graph_N=500_q=243_T=20000000')
-    print g.is_static()
-    print g.is_switch_possible()
-    watch_one_graph(g, 10000000)
+#     g = read_graph_from_file('OUT/graph_N=500_q=243_T=20000000')
+#     print g.is_static()
+#     print g.is_switch_possible()
+#     watch_one_graph(g, 10000000)
     
+#     N = 500
+#     av_q = 100
+#     T = 1200000
+
+
+
+
+
+
+# rysowanie
+# a = plt.plot(r['q'], r['s'], color='blue')
+# b = plt.scatter(r['q'], r['d'], color='red')
+# plt.legend([a, b], ['Largest component', 'Largest domain'])
+# plt.ylabel('fraction of # of nodes')
+# plt.xlabel('q')
+# plt.title('Network with 500 nodes, # of attrs f = 3.\nResults averaged over 400 realizations.')
+# plt.plot(r['q'], r['s'], color='blue')
+# plt.xlim([1, 10000])
+# plt.ylim([0, 1])
+# plt.xscale('log')
+# plt.show()
+# plt.clf()
