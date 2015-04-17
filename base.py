@@ -546,9 +546,37 @@ class AxSimulation():
             self.try_sleep()
         return res
 
+    def watch_many_graphs(self, N, T, q_list):
+        """Method is calling base_algorithm_watch_graph in loop
+        for many values of q and saves results into dictionaries.
+        @param N: number of nodes in graph
+        @param T: number of time steps in base algorithm
+        @param q_list: list of values of q to iterate
+        @result (dict, dict): dictionaries with final graphs
+        and with all data for them
+        """
+        result = {}
+        graphs = {}
+        for q in q_list:
+            start_time = time.time()
+            g = AxGraph.random_graph_with_attrs(N, self.av_k, self.f, q)
+            graphs[q], result[q] = self.basic_algorithm_watch_graph(g, T)
+            log.info("watching graph algorithm for N = %s, T = %s, q = %s finished in %s minutes"\
+                     % (N, T, q, round((time.time()-start_time)/60.0, 2)))
+            self.try_sleep()
+        return graphs, result
+
+
 if __name__ == '__main__':
-    g2=AxGraph.random_graph_with_attrs(q=100)
-    x = g2.get_domains()
-    print len(x)
-    print len(g2.clusters())
-    x=x
+    # g2=AxGraph.random_graph_with_attrs(q=100)
+    # x = g2.get_domains()
+    # print len(x)
+    # print len(g2.clusters())
+    # x=x
+    g=AxGraph.random_graph_with_attrs(N=50, q=1000)
+    print 1
+    g2=basic_algorithm_multi('BA', 3, g, 100000)
+    print 2
+    l2=g2.layout_kamada_kawai()
+    print 3
+    ig.plot(g2, layout = l2)
