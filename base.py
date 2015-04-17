@@ -120,7 +120,7 @@ class AxGraph(ig.Graph):
                 return True
         return False
     
-    # TODO True jeżeli wszystki możliwe niepołączone pary maja 0 wspólnych atr, a wszystkie połączone maja wszystkie takie same attr
+    # TODO True jeżeli wszystki możliwe niepołączone pary maja 0 wspólnych atr, a wszystkie połączone maja wszystkie takie same attr lub 0
     def is_dynamically_trapped(self):
         """This method finds out if graph is in dynamic equilibrium,
         i.e. there is no chance for interaction between two
@@ -150,15 +150,16 @@ class AxGraph(ig.Graph):
         """Returns domains, number and sizes.
         """
         domains = {}
-        uniq = {}
-        for i, attrs in enumerate(self.vs()["f"]):
-            for key, value in uniq.items():
-                if all(attrs == value):
-                    domains[key] += 1
-                    break
-            else:
-                uniq[i] = attrs
-                domains[i] = 1
+        for j, g in enumerate(self.clusters().subgraphs()):
+            uniq = {}
+            for i, attrs in enumerate(g.vs()["f"]):
+                for key, value in uniq.items():
+                    if all(attrs == value):
+                        domains[key] += 1
+                        break
+                else:
+                    uniq[str(j)+'_'+str(i)] = attrs
+                    domains[str(j)+'_'+str(i)] = 1
         return domains
 
     def get_largest_domain(self):
@@ -547,7 +548,8 @@ class AxSimulation():
         return res
 
 if __name__ == '__main__':
-    basic_algorithm_multi('1', 3, 3, 3)
-    x = AxGraph.random_graph_with_attrs(500, 4, 3, 30)
-    print x
-    print type(x)
+    g2=AxGraph.random_graph_with_attrs(q=100)
+    x = g2.get_domains()
+    print len(x)
+    print len(g2.clusters())
+    x=x
