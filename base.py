@@ -96,6 +96,11 @@ class AxGraph(ig.Graph):
         """
         return cls.Read_Pickle(name)
 
+    def pickle(self, name):
+        """Writes graph to file in pickle format.
+        """
+        return self.write_pickle(name)
+
     def is_static(self):
         """This method finds out if switch or interaction is ever possible,
         i.e. if there is connected pair of nodes with not all
@@ -135,6 +140,15 @@ class AxGraph(ig.Graph):
                     return False
         return True
 
+    def get_components(self):
+        """Returns components of graph in from of dict of lists.
+        Its lighter than AxGraph.clusters().
+        """
+        components = {}
+        for i, comp in enumerate(self.clusters()):
+            components[str(i)] = comp
+        return components
+
     def get_largest_component(self):
         """Returns number of nodes in largest component of graph.
         Its easy to change this function to return also number of components.
@@ -164,54 +178,39 @@ class AxGraph(ig.Graph):
 
     def get_largest_domain(self):
         """Returns number of nodes in largest domain of graph.
-        Its easy to change this function to return also number of domains.
         """
         domains = {}
-        uniq = {}
-        for i, attrs in enumerate(self.vs()["f"]):
-            for key, value in uniq.items():
-                if all(attrs == value):
-                    domains[key] += 1
-                    break
-            else:
-                uniq[i] = attrs
-                domains[i] = 1
+        for j, g in enumerate(self.clusters().subgraphs()):
+            uniq = {}
+            for i, attrs in enumerate(g.vs()["f"]):
+                for key, value in uniq.items():
+                    if all(attrs == value):
+                        domains[key] += 1
+                        break
+                else:
+                    uniq[str(j)+'_'+str(i)] = attrs
+                    domains[str(j)+'_'+str(i)] = 1
         return max(domains.values())
     
     def get_number_of_domains(self):
         """Returns number of domains in graph.
         """
         domains = {}
-        uniq = {}
-        for i, attrs in enumerate(self.vs()["f"]):
-            for key, value in uniq.items():
-                if all(attrs == value):
-                    domains[key] += 1
-                    break
-            else:
-                uniq[i] = attrs
-                domains[i] = 1
+        for j, g in enumerate(self.clusters().subgraphs()):
+            uniq = {}
+            for i, attrs in enumerate(g.vs()["f"]):
+                for key, value in uniq.items():
+                    if all(attrs == value):
+                        domains[key] += 1
+                        break
+                else:
+                    uniq[str(j)+'_'+str(i)] = attrs
+                    domains[str(j)+'_'+str(i)] = 1
         return len(domains)
-    
-    def get_largest_domain_and_number(self):
-        """Returns number of nodes in largest domain of graph
-        and number of domains. It's faster then using get_largest_domain
-        and get_number_of_domains separately.
-        """
-        domains = {}
-        uniq = {}
-        for i, attrs in enumerate(self.vs()["f"]):
-            for key, value in uniq.items():
-                if all(attrs == value):
-                    domains[key] += 1
-                    break
-            else:
-                uniq[i] = attrs
-                domains[i] = 1
-        return max(domains.values()), len(domains)
     
 #########################################################################
 # Functions used in running simulation on several processes.            #
+# Multiprocessing can not send instance methods to child processes.     #
 #########################################################################
 
 def switch_connection_while(g, index, del_index, n, neigs):
@@ -437,12 +436,12 @@ class AxSimulation():
         Separated from basic_algorithm() to keep speed of that function.
         @param g: graph to work on
         @param T: number of time steps
-        @return (graph, list, list): g after applying algorithm,
-        list with number of time steps, list with sum of switches from the beginning
+        @return (graph, dict): g after applying algorithm,
+        and dictionary of some parameters of graph
         """
         save_step = int(T) / 10000 or 1
         n = len(g.vs())
-        res = {'time': [], 'switches_sum': [], 'domains': [], 'components': [], 'degree_dist': []}
+        res = {'time': [], 'switches_sum': [], 'domains': [], 'components': [], 'degree': []}
         switches_sum = 0
         for i in range(T):
             #get one node and randomly select one of it's neighbors
@@ -466,9 +465,9 @@ class AxSimulation():
             if i % save_step == 0:
                 res['time'].append(i)
                 res['switches_sum'].append(switches_sum)
-                res['components'].append(g.clusters())
+                res['components'].append(g.get_components())
                 res['domains'].append(g.get_domains())
-                res['degree_dist'].append(g.degree_distribution())
+                res['degree'].append(g.degree())  # remember about g.degree_distribution()
         return g, res
 
     def func_star(self, chain):
