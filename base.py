@@ -467,7 +467,7 @@ class AxSimulation():
                 res['switches_sum'].append(switches_sum)
                 res['components'].append(g.get_components())
                 res['domains'].append(g.get_domains())
-                res['degree'].append(g.degree())  # remember about g.degree_distribution()
+                res['degree'].append(list(g.degree_distribution().bins()))  # remember about g.degree()
         return g, res
 
     def func_star(self, chain):

@@ -125,7 +125,13 @@ def main(N=500, av_q=20, T=1000000):
     return
 
 if __name__ == "__main__":
-    main(N=500, av_q=4, T=200000)
+    #main(N=500, av_q=4, T=200000)
+
+    q_list = [2, 5, 10, 20]
+    simulation = AxSimulation('BA', 4.0, 3, 4, [])
+    res = simulation.watch_many_graphs(500, 1000000, q_list)
+    write_object_to_file(res, 'test.data')
+
     #loop_over_q()
 #     g = read_graph_from_file('OUT/graph_N=500_q=243_T=20000000')
 #     print g.is_static()
