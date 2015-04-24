@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import logging as log
 from multiprocessing import Pool
 import sys
+import os
 from base import *
 
 def loop_over_q():
@@ -124,13 +125,115 @@ def main(N=500, av_q=20, T=1000000):
     log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
     return
 
-if __name__ == "__main__":
-    #main(N=500, av_q=4, T=200000)
+def watch_graphs():
+    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
+    l = [129, 152, 177, 208, 243, 284, 333, 389, 456]
+    q_list += [l[i]+(l[i+1]-l[i])/3 for i in range(len(l)-1)]\
+                + [l[i]+2*(l[i+1]-l[i])/3 for i in range(len(l)-1)]
+    q_list.sort()
+    simulation = AxSimulation('normal', 4.0, 3, 4, [])
+    for q in q_list[::12]:
+        res = simulation.watch_many_graphs(500, 1000000, [q])
+        write_object_to_file(res, 'OUT/q='+str(q)+'_watch.data')
+    return
 
-    q_list = [2, 5, 10, 20]
-    simulation = AxSimulation('BA', 4.0, 3, 4, [])
-    res = simulation.watch_many_graphs(500, 1000000, q_list)
-    write_object_to_file(res, 'test.data')
+
+def get_distribution(values):
+    res = {}
+    for value in values:
+        if value in res:
+            res[value] += 1
+        else:
+            res[value] = 1
+    return [int(x) for x, y in res.items()], [y for x, y in res.items()]
+
+def plot_graphs():
+    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
+    l = [129, 152, 177, 208, 243, 284, 333, 389, 456]
+    q_list += [l[i]+(l[i+1]-l[i])/3 for i in range(len(l)-1)]\
+                + [l[i]+2*(l[i+1]-l[i])/3 for i in range(len(l)-1)]
+    q_list.sort()
+    N = 500.0
+    for q in q_list[::12]:
+        res = read_object_from_file('OUT/q='+str(q)+'_watch.data')[q]
+        print 'wczytało dane dla q = ' + str(q)
+        os.mkdir('/home/tomaszraducha/PycharmProjects/Networks/PLOTS/'+str(q))
+        os.mkdir('/home/tomaszraducha/PycharmProjects/Networks/PLOTS/'+str(q)+'/distributions')
+
+        plt.plot(res['time'], res['switches_sum'])
+        plt.xlabel('time step')
+        plt.ylabel('number of switches')
+        plt.savefig('PLOTS/'+str(q)+'/q='+str(q)+'switches.png', format="png")
+        plt.clf()
+
+        comp = [max(i.values())/N for i in res['components']]
+        plt.plot(res['time'], comp)
+        plt.xlabel('time step')
+        plt.ylabel('largest component')
+        plt.savefig('PLOTS/'+str(q)+'/q='+str(q)+'largest_comp.png', format="png")
+        plt.clf()
+
+        dom = [max(i.values())/N for i in res['domains']]
+        plt.plot(res['time'], dom)
+        plt.xlabel('time step')
+        plt.ylabel('largest domain')
+        plt.savefig('PLOTS/'+str(q)+'/q='+str(q)+'largest_dom.png', format="png")
+        plt.clf()
+
+        comps = [len(i) for i in res['components']]
+        plt.plot(res['time'], comps)
+        plt.xlabel('time step')
+        plt.ylabel('number of components')
+        plt.savefig('PLOTS/'+str(q)+'/q='+str(q)+'number_of_comps.png', format="png")
+        plt.clf()
+
+        doms = [len(i) for i in res['domains']]
+        plt.plot(res['time'], doms)
+        plt.xlabel('time step')
+        plt.ylabel('number of domains')
+        plt.savefig('PLOTS/'+str(q)+'/q='+str(q)+'number_of_doms.png', format="png")
+        plt.clf()
+
+        plt.plot(res['time'], comps, color='blue')
+        plt.plot(res['time'], doms, color='red')
+        plt.xlabel('time step')
+        plt.ylabel('# of components (blue), domains (red)')
+        plt.savefig('PLOTS/'+str(q)+'/q='+str(q)+'number_of_comps_and_doms.png', format="png")
+        plt.clf()
+
+        for i, t in enumerate(res['time'][::200]):
+            os.mkdir('/home/tomaszraducha/PycharmProjects/Networks/PLOTS/'+str(q)+'/distributions/'+str(t))
+
+            plt.scatter([j[0] for j in res['degree'][i]], [j[1] for j in res['degree'][i]])
+            plt.xlabel('degree of node')
+            plt.ylabel('number of nodes')
+            plt.savefig('PLOTS/'+str(q)+'/distributions/'+str(t)+'/t='+str(t)+'q='+str(q)+'degree.png', format="png")
+            plt.clf()
+
+            x, y = get_distribution(res['components'][i].values())
+            plt.scatter(x, y)
+            plt.xlabel('size of component')
+            plt.ylabel('number of components')
+            plt.savefig('PLOTS/'+str(q)+'/distributions/'+str(t)+'/t='+str(t)+'q='+str(q)+'component_dist.png', format="png")
+            plt.clf()
+
+            x, y = get_distribution(res['domains'][i].values())
+            plt.scatter(x, y)
+            plt.xlabel('size of domain')
+            plt.ylabel('number of domains')
+            plt.savefig('PLOTS/'+str(q)+'/distributions/'+str(t)+'/t='+str(t)+'q='+str(q)+'domain_dist.png', format="png")
+            plt.clf()
+
+            print 'narysowało ' + str(i) + '  /  ' + str(len(res['time'][::200]))
+
+        print 'narysowało dla q = ' + str(q)
+    return
+
+if __name__ == "__main__":
+    #watch_graphs()
+    plot_graphs()
+    #main(N=500, av_q=4, T=200000)
+    #watch_graphs()
 
     #loop_over_q()
 #     g = read_graph_from_file('OUT/graph_N=500_q=243_T=20000000')

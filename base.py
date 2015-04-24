@@ -146,7 +146,7 @@ class AxGraph(ig.Graph):
         """
         components = {}
         for i, comp in enumerate(self.clusters()):
-            components[str(i)] = comp
+            components[str(i)] = len(comp)
         return components
 
     def get_largest_component(self):
@@ -467,8 +467,8 @@ class AxSimulation():
                 res['switches_sum'].append(switches_sum)
                 res['components'].append(g.get_components())
                 res['domains'].append(g.get_domains())
-                res['degree'].append(list(g.degree_distribution().bins()))  # remember about g.degree()
-        return g, res
+                res['degree'].append(list((x, y) for x, _, y in g.degree_distribution().bins()))  # remember about g.degree()
+        return res
 
     def func_star(self, chain):
         """Converts `f([1,2])` to `f(1,2)` call.
@@ -556,27 +556,30 @@ class AxSimulation():
         and with all data for them
         """
         result = {}
-        graphs = {}
         for q in q_list:
             start_time = time.time()
             g = AxGraph.random_graph_with_attrs(N, self.av_k, self.f, q)
-            graphs[q], result[q] = self.basic_algorithm_watch_graph(g, T)
+            result[q] = self.basic_algorithm_watch_graph(g, T)
             log.info("watching graph algorithm for N = %s, T = %s, q = %s finished in %s minutes"\
                      % (N, T, q, round((time.time()-start_time)/60.0, 2)))
             self.try_sleep()
-        return graphs, result
+        return result
 
 
 if __name__ == '__main__':
+    simulation = AxSimulation('normal', 4.0, 3, 4, [])
+    q_list = [2, 50, 100, 500]
+    simulation.watch_many_graphs(500, 1000000, q_list)
+
     # g2=AxGraph.random_graph_with_attrs(q=100)
     # x = g2.get_domains()
     # print len(x)
     # print len(g2.clusters())
     # x=x
-    g=AxGraph.random_graph_with_attrs(N=50, q=1000)
-    print 1
-    g2=basic_algorithm_multi('BA', 3, g, 100000)
-    print 2
-    l2=g2.layout_kamada_kawai()
-    print 3
-    ig.plot(g2, layout = l2)
+    # g=AxGraph.random_graph_with_attrs(N=50, q=1000)
+    # print 1
+    # g2=basic_algorithm_multi('BA', 3, g, 100000)
+    # print 2
+    # l2=g2.layout_kamada_kawai()
+    # print 3
+    # ig.plot(g2, layout = l2)
