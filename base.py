@@ -113,7 +113,7 @@ class AxGraph(ig.Graph):
                 return False
         return True
 
-    def is_switch_possible(self):
+    def is_component_static(self):
         """This method finds out if switch is ever possible,
         i.e. if there is connected pair of nodes with all
         attributes different.
@@ -122,8 +122,41 @@ class AxGraph(ig.Graph):
         """
         for pair in self.get_edgelist():
             if all(self.vs(pair[0])["f"][0] != self.vs(pair[1])["f"][0]):
-                return True
-        return False
+                return False
+        return True
+
+    def is_domain_static(self):
+        """
+        """
+        N = len(self.vs())
+        for i in range(N):
+            for j in range(i+1, N):
+                if not (all(self.vs(i)["f"][0] == self.vs(j)["f"][0]) or all(self.vs(i)["f"][0] != self.vs(j)["f"][0])):
+                    return False
+        return True
+
+    def what_is_static(self):
+        """
+        """
+        res = {'domain': True, 'component': True, 'all': True}
+        N = len(self.vs())
+        edges = self.get_edgelist()
+        for i in range(N):
+            for j in range(i+1, N):
+                if res['domain']:
+                    if not (all(self.vs(i)["f"][0] == self.vs(j)["f"][0]) or all(self.vs(i)["f"][0] != self.vs(j)["f"][0])):
+                        res['domain'] = False
+                if res['component'] and (i,j) in edges:
+                    if all(self.vs(i)["f"][0] != self.vs(j)["f"][0]):
+                        res['component'] = False
+                if res['all'] and (i,j) in edges:
+                    if not all(self.vs(i)["f"][0] == self.vs(j)["f"][0]):
+                        res['all'] = False
+            if not (res['all'] or res['component'] or res['domain']):
+                break
+        if res['all']:
+            res['domain'] = True
+        return res
     
     # TODO True jeżeli wszystki możliwe niepołączone pary maja 0 wspólnych atr, a wszystkie połączone maja wszystkie takie same attr lub 0
     def is_dynamically_trapped(self):
@@ -133,10 +166,10 @@ class AxGraph(ig.Graph):
         @param g: graph
         @return boolean: True if graph is trapped
         """
-        N = len(self.es())
+        N = len(self.vs())
         for i in range(N):
             for j in range(i+1, N):
-                if any(self.vs(i)["f"][0] == self.vs(j)["f"][0]):
+                if not (all(self.vs(i)["f"][0] == self.vs(j)["f"][0]) or all(self.vs(i)["f"][0] != self.vs(j)["f"][0])):
                     return False
         return True
 
@@ -282,6 +315,42 @@ def basic_algorithm_multi(mode, f, g, T):
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
             vertex_attrs[change_attr] = neighbor_attrs[change_attr]
     return g
+
+def find_times_multi(mode, f, g, T, term):
+    """
+    @param mode: mode of simulation, defines switching function
+    @param f: number of attributes of nodes
+    @param g: graph to work on
+    @param T: number of time steps
+    @return: g after applying algorithm
+    """
+    res = {}
+    n = len(g.vs())
+    for i in range(T):
+        #get one node and randomly select one of it's neighbors
+        index = int(rand()*n)
+        neigs = g.neighbors(index)
+        if not neigs:
+            continue
+        neig_index = random.choice(neigs)
+        #compare attributes of two nodes
+        vertex_attrs = g.vs(index)["f"][0]
+        neighbor_attrs = g.vs(neig_index)["f"][0]
+        m = np.count_nonzero((vertex_attrs == neighbor_attrs))
+        #decide what to do according to common attributes
+        if m == 0:
+            SWITCH_MAP[mode](g, index, neig_index, n, neigs)
+        elif m != f and rand() < m*1.0/f:
+            change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
+            vertex_attrs[change_attr] = neighbor_attrs[change_attr]
+        if i > term:
+            statics = g.what_is_static()
+            for key, value in statics.items():
+                if value and key not in res:
+                    res[key] = i
+            if statics['all'] and statics['component'] and statics['domain']:
+                break
+    return res
 
 #########################################################################
 # Class holding functions for simulations and values of parameters.     #
