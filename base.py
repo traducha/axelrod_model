@@ -284,9 +284,74 @@ def switch_connection_BA(g, index, del_index, n, neigs):
     g.add_edges([(index, new_neig)])
     return g
 
+def switch_connection_cluster(g, index, del_index, n, neigs):
+    """
+    @param g: graph to work on
+    @param index: id of main node
+    @param del_index: id of node to disconnect
+    @param n: number of nodes in g
+    @param neigs: ids of neighbors of index
+    @return: graph g after switch
+    """
+    g.delete_edges((index, del_index))
+    switch_group = []
+    new_neig = None
+    for node in neigs:
+        if node != del_index:
+            switch_group += g.neighbors(node)
+    if switch_group:
+        switch_group = list(set(switch_group))
+        random.shuffle(switch_group)
+        for i in switch_group:
+            if i not in neigs and i != index:
+                new_neig = i
+                break
+    if not new_neig:
+        while 1:
+            new_neig = random.randint(0, n-1)
+            if new_neig not in neigs and new_neig != index:
+                break
+    g.add_edges([(index, new_neig)])
+    return g
+
+    # different method not allowing network to break into parts
+    # switch_group = g.neighbors(del_index)
+    # random.shuffle(switch_group)
+    # for i in switch_group:
+    #     if i not in neigs and i != index:
+    #         g.delete_edges((index, del_index))
+    #         g.add_edges([(index, i)])
+    #         break
+    # return g
+
+__a = 1
+
+def switch_connection_k_plus_a(g, index, del_index, n, neigs):
+    """This function switches connection for given node
+    without doubling any connection. Probability is proportional
+    to degree of a node plus A.
+    @param g: graph to work on
+    @param index: id of main node
+    @param del_index: id of node to disconnect
+    @param n: number of nodes in g
+    @param neigs: ids of neighbors of index
+    @return: graph g after switch
+    """
+    g.delete_edges((index, del_index))
+    cumulative_degree_plus_a = np.cumsum(np.array(g.degree()) + __a)
+    while 1:
+        new_neig = np.searchsorted(cumulative_degree_plus_a, random.randint(1, cumulative_degree_plus_a[-1]))
+        if new_neig not in neigs and new_neig != index:
+            break
+    g.add_edges([(index, new_neig)])
+    return g
+
 SWITCH_MAP = {'1': switch_connection_while, '2': switch_connection_BA,
               1: switch_connection_while, 2: switch_connection_BA,
-              'normal': switch_connection_while, 'BA': switch_connection_BA}
+              'normal': switch_connection_while, 'BA': switch_connection_BA,
+              'cluster': switch_connection_cluster, '3': switch_connection_cluster,
+              3: switch_connection_cluster, 'k_plus_a': switch_connection_k_plus_a,
+              '4': switch_connection_k_plus_a, 4: switch_connection_k_plus_a}
 
 def basic_algorithm_multi(mode, f, g, T):
     """This is the basic algorithm of axelrod's coevolving network.
@@ -343,7 +408,7 @@ def find_times_multi(mode, f, g, T, term):
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
             vertex_attrs[change_attr] = neighbor_attrs[change_attr]
-        if i > term:
+        if i > term and i % 10 == 0:
             statics = g.what_is_static()
             for key, value in statics.items():
                 if value and key not in res:
@@ -371,12 +436,19 @@ class AxSimulation():
         @param f: number of attributes (every attribute can have q different values)
         @param processes: number of parallel processes to spawn
         """
-        self.switch_connection_while = switch_connection_while
+        # self.CLUSTER = 0
+        # self.NOT = 0
+        # self.switch_connection_while = switch_connection_while
         
         if mode in ['normal', '1', 1]:
             self.switch_function = self.switch_connection_while
         elif mode in ['BA', '2', 2]:
             self.switch_function = self.switch_connection_BA
+        elif mode in ['cluster', '3', 3]:
+            self.switch_function = self.switch_connection_cluster
+        elif mode in ['k_plus_a', '4', 4]:
+            self.switch_function = self.switch_connection_k_plus_a
+            self.a = 1
         else:
             raise ValueError("Invalid mode of simulation! Choose one of 'normal', 'random', 'BA', 1 or 2. %s was given." % mode)
         
@@ -410,6 +482,10 @@ class AxSimulation():
         self.processes = processes
         self.rest = rest
         self._start_time = time.time()
+
+    def set_a(self, a):
+        self.a = a
+        return
         
     def try_sleep(self):
         if self.rest and ((time.time() - self._start_time) >= (self.rest[0] * 3600)):
@@ -473,6 +549,59 @@ class AxSimulation():
         g.add_edges([(index, new_neig)])
         return g
 
+    def switch_connection_cluster(self, g, index, del_index, n, neigs):
+        """
+        @param g: graph to work on
+        @param index: id of main node
+        @param del_index: id of node to disconnect
+        @param n: number of nodes in g
+        @param neigs: ids of neighbors of index
+        @return: graph g after switch
+        """
+        g.delete_edges((index, del_index))
+        switch_group = []
+        new_neig = None
+        for node in neigs:
+            if node != del_index:
+                switch_group += g.neighbors(node)
+        if switch_group:
+            switch_group = list(set(switch_group))
+            random.shuffle(switch_group)
+            for i in switch_group:
+                if i not in neigs and i != index:
+                    # self.CLUSTER += 1
+                    new_neig = i
+                    break
+        if not new_neig:
+            # self.NOT += 1
+            # edges = len(g.es())  # g.es() is faster than g.get_edgelist()
+            while 1:
+                new_neig = random.randint(0, n-1)
+                if new_neig not in neigs and new_neig != index:
+                    break
+        g.add_edges([(index, new_neig)])
+        return g
+
+    def switch_connection_k_plus_a(self, g, index, del_index, n, neigs):
+        """This function switches connection for given node
+        without doubling any connection. Probability is proportional
+        to degree of a node plus A.
+        @param g: graph to work on
+        @param index: id of main node
+        @param del_index: id of node to disconnect
+        @param n: number of nodes in g
+        @param neigs: ids of neighbors of index
+        @return: graph g after switch
+        """
+        g.delete_edges((index, del_index))
+        cumulative_degree_plus_a = np.cumsum(np.array(g.degree()) + self.a)
+        while 1:
+            new_neig = np.searchsorted(cumulative_degree_plus_a, random.randint(1, cumulative_degree_plus_a[-1]))
+            if new_neig not in neigs and new_neig != index:
+                break
+        g.add_edges([(index, new_neig)])
+        return g
+
     def basic_algorithm(self, g, T):
         """This is the basic algorithm of axelrod's coevolving network.
         @param g: graph to work on
@@ -497,6 +626,9 @@ class AxSimulation():
             elif m != self.f and rand() < m*1.0/self.f:
                 change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
                 vertex_attrs[change_attr] = neighbor_attrs[change_attr]
+            if i % 500000 == 0:
+                if g.is_static():
+                    return g
         return g
 
     def basic_algorithm_watch_graph(self, g, T):
@@ -534,10 +666,10 @@ class AxSimulation():
             if i % save_step == 0:
                 res['time'].append(i)
                 res['switches_sum'].append(switches_sum)
-                res['components'].append(g.get_components())
-                res['domains'].append(g.get_domains())
-                res['degree'].append(list((x, y) for x, _, y in g.degree_distribution().bins()))  # remember about g.degree()
-        return res
+                # res['components'].append(g.get_components())
+                # res['domains'].append(g.get_domains())
+                # res['degree'].append(list((x, y) for x, _, y in g.degree_distribution().bins()))  # remember about g.degree()
+        return res, g
 
     def func_star(self, chain):
         """Converts `f([1,2])` to `f(1,2)` call.
@@ -590,7 +722,9 @@ class AxSimulation():
         pool.close()
         pool.join()
         pool.terminate()
-        return np.mean(biggest_clusters), np.mean(biggest_domain), np.std(biggest_clusters), np.std(biggest_domain)
+        res = (np.mean(biggest_clusters), np.mean(biggest_domain), np.std(biggest_clusters), np.std(biggest_domain))
+        write_object_to_file(res, 'q='+str(q)+'.data')
+        return res
     
     def get_data_for_qsd(self, N, T, av_over_q, q_list):
         """Method with loop over q to get data for plots.
@@ -636,19 +770,80 @@ class AxSimulation():
 
 
 if __name__ == '__main__':
-    simulation = AxSimulation('normal', 4.0, 3, 4, [])
-    q_list = [2, 50, 100, 500]
-    simulation.watch_many_graphs(500, 1000000, q_list)
+    # simulation = AxSimulation('normal', 4.0, 3, 4, [])
+    # q_list = [2, 50, 100, 500]
+    # simulation.watch_many_graphs(500, 1000000, q_list)
 
     # g2=AxGraph.random_graph_with_attrs(q=100)
     # x = g2.get_domains()
     # print len(x)
     # print len(g2.clusters())
     # x=x
-    # g=AxGraph.random_graph_with_attrs(N=50, q=1000)
-    # print 1
-    # g2=basic_algorithm_multi('BA', 3, g, 100000)
-    # print 2
-    # l2=g2.layout_kamada_kawai()
-    # print 3
-    # ig.plot(g2, layout = l2)
+    from matplotlib import pyplot as plt
+    sim = AxSimulation('cluster', 4.0, 3, 4, [])
+    g = AxGraph.random_graph_with_attrs(N=500, q=50)
+
+    res, g = sim.basic_algorithm_watch_graph(g, 1000000)
+    print g.get_largest_component()
+    print g.get_largest_domain()
+    print g.is_static()
+    plt.plot(res['time'], res['switches_sum'])
+    plt.show()
+    plt.clf()
+
+    res, g = sim.basic_algorithm_watch_graph(g, 500000)
+    print g.get_largest_component()
+    print g.get_largest_domain()
+    print g.is_static()
+    plt.plot(res['time'], res['switches_sum'])
+    plt.show()
+    plt.clf()
+
+    res, g = sim.basic_algorithm_watch_graph(g, 500000)
+    print g.get_largest_component()
+    print g.get_largest_domain()
+    print g.is_static()
+    plt.plot(res['time'], res['switches_sum'])
+    plt.show()
+    plt.clf()
+
+    res, g = sim.basic_algorithm_watch_graph(g, 500000)
+    print g.get_largest_component()
+    print g.get_largest_domain()
+    print g.is_static()
+    plt.plot(res['time'], res['switches_sum'])
+    plt.show()
+    plt.clf()
+
+    res, g = sim.basic_algorithm_watch_graph(g, 500000)
+    print g.get_largest_component()
+    print g.get_largest_domain()
+    print g.is_static()
+    plt.plot(res['time'], res['switches_sum'])
+    plt.show()
+    plt.clf()
+
+    res, g = sim.basic_algorithm_watch_graph(g, 500000)
+    print g.get_largest_component()
+    print g.get_largest_domain()
+    print g.is_static()
+    plt.plot(res['time'], res['switches_sum'])
+    plt.show()
+    plt.clf()
+    #
+    # res = res
+
+    g = AxGraph.random_graph_with_attrs(N=500, q=450)
+    __a = 1
+    simulation = AxSimulation('k_plus_a', 4.0, 3, 4, [])
+    g = simulation.basic_algorithm(g, 2000000)
+    # print 'CLUSTER: ', simulation.CLUSTER
+    # print 'NOT: ', simulation.NOT
+    l = g.layout_kamada_kawai()
+    g.vs['size'] = 5
+    ig.plot(g, layout=l)
+    ig.plot(g)
+    g.vs['size'] = 8
+    ig.plot(g, layout=l)
+    ig.plot(g)
+    g2 = g

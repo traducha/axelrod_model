@@ -6,6 +6,7 @@ import logging as log
 from multiprocessing import Pool
 import sys
 import os
+import base
 from base import *
 
 def loop_over_q():
@@ -108,6 +109,12 @@ def main(N=500, av_q=20, T=1000000):
         log.info("mode of simulation is: %s" % mode)
     else:
         raise Exception("Use switch '-m' to define mode of simulation")
+
+    if '-a' in sys.argv:
+        a = sys.argv[sys.argv.index('-a')+1]
+        log.info("constant 'a' is: %s" % a)
+    elif mode in ['k_plus_a', '4', 4]:
+        raise Exception("Use switch '-a' to define constant 'a' for simulation mode 'k_plus_a'")
     
     if '--rest' in sys.argv:
         rest = sys.argv[sys.argv.index('--rest')+1]
@@ -118,6 +125,8 @@ def main(N=500, av_q=20, T=1000000):
     # set simulation parameters
     q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
     simulation = AxSimulation(mode, 4.0, 3, processes, rest)
+    simulation.set_a(a)
+    base.__a = a
     # run simulation and save results
     main_time = time.time()
     res = simulation.get_data_for_qsd(N, T, av_q, q_list)
@@ -229,9 +238,115 @@ def plot_graphs():
         print 'narysowało dla q = ' + str(q)
     return
 
+def check_sd_vs_n(q, N_list):
+    res = {}
+    av_q = 4
+    simulation = AxSimulation('BA', 4.0, 3, 4, [])
+    for n in N_list:
+        main_time = time.time()
+        res[n] = simulation.get_data_for_qsd(n, 500000, av_q, [q])
+        log.info("N = %s executed in %s minutes" % (n, round((time.time()-main_time)/60.0, 2)))
+    write_object_to_file(res, 'sd_vs_N_q='+str(q)+'_q_times_'+str(av_q)+'_mode='+'BA'+'.data')
+
 if __name__ == "__main__":
+    # q = 5
+    # N = [10, 20, 50, 80, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+    # check_sd_vs_n(q, N)
+
+    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #71 points in log scale
+    # l = [94, 111, 129, 152, 177, 208, 243, 284, 333, 389, 456]
+    # q_list += [l[i]+(l[i+1]-l[i])/3 for i in range(len(l)-1)]\
+    #             + [l[i]+2*(l[i+1]-l[i])/3 for i in range(len(l)-1)]
+    # q_list = q_list[::3]
+    q_list.sort()
+    s =[]
+    d =[]
+    s_ = []
+    d_ = []
+    Q = []
+    for q in q_list:
+        try:
+            x, y, z, w = read_object_from_file('cluster500test/q=%s.data' % q)
+        except:
+            continue
+        s.append(x)
+        d.append(y)
+        s_.append(z)
+        d_.append(w)
+        Q.append(q)
+
+    res = read_object_from_file('res_N=500_q_times_400_mode=cluster.data')
+
+    plt.scatter(res['q'], res['s'], color='blue')
+    plt.scatter(res['q'], res['d'], color='red')
+    plt.scatter(Q, s, color='black')
+    plt.scatter(Q, d, color='black')
+    plt.xlim([1, 10000])
+    plt.ylim([0, 1])
+    plt.xscale('log')
+    # plt.yscale('log')
+    plt.show()
+
+    plt.scatter(q_list, s_, color='blue')
+    plt.scatter(q_list, d_, color='red')
+    plt.xlim([1, 10000])
+    plt.xscale('log')
+    plt.show()
+
+    s1500 =[]
+    d1500 =[]
+    s_1500 = []
+    d_1500 = []
+    for q in q_list:
+        x, y, z, w = read_object_from_file('N1500/q=%s.data' % q)
+        s1500.append(x)
+        d1500.append(y)
+        s_1500.append(z)
+        d_1500.append(w)
+
+    s1000 =[]
+    d1000 =[]
+    s_1000 = []
+    d_1000 = []
+    for q in q_list:
+        x, y, z, w = read_object_from_file('N1000/q=%s.data' % q)
+        s1000.append(x)
+        d1000.append(y)
+        s_1000.append(z)
+        d_1000.append(w)
+
+    s_prim = []
+    d_prim = []
+    for i, q in enumerate(q_list[:-1]):
+        s_prim.append((s[i+1]-s[i])/(q_list[i+1]-q_list[i]))
+        d_prim.append((d[i+1]-d[i])/(q_list[i+1]-q_list[i]))
+
+    s_prim2 = []
+    d_prim2 = []
+    for i, q in enumerate(q_list[1:-1]):
+        s_prim2.append((s_prim[i]-s_prim[i-1])/(q_list[i]-q_list[i-1]))
+        d_prim2.append((d_prim[i]-d_prim[i-1])/(q_list[i]-q_list[i-1]))
+
+    # plt.scatter(q_list[1:-1], s_prim2, color='blue')
+    # plt.scatter(q_list[1:-1], d_prim2, color='red')
+
+    plt.scatter(q_list, s1500, color='blue')
+    plt.scatter(q_list, d1500, color='red')
+
+    # plt.scatter(q_list, s_, color='blue')
+    # plt.scatter(q_list, s_1000, color='red')
+    # plt.scatter(q_list, s_1500, color='green')
+
+    plt.xlim([1, 10000])
+    plt.ylim([0, 1])
+    plt.xscale('log')
+    # plt.yscale('log')
+    plt.show()
+
+    s = s
+
     #watch_graphs()
-    plot_graphs()
+    #plot_graphs()
     #main(N=500, av_q=4, T=200000)
     #watch_graphs()
 
@@ -263,3 +378,6 @@ if __name__ == "__main__":
 # plt.xscale('log')
 # plt.show()
 # plt.clf()
+
+# wsp klastrowania globalny g.transitivity_undirected()
+# lokalny g.transitivity_avglocal_undirected(mode="nan") albomode="zero"
