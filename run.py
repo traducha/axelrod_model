@@ -8,6 +8,7 @@ import sys
 import os
 import base
 from base import *
+from scipy.optimize import curve_fit as fit
 
 def loop_over_q():
     """This function makes several things. Goal is to visualize
@@ -111,9 +112,9 @@ def main(N=500, av_q=20, T=1000000):
         raise Exception("Use switch '-m' to define mode of simulation")
 
     if '-a' in sys.argv:
-        a = sys.argv[sys.argv.index('-a')+1]
+        a = int(sys.argv[sys.argv.index('-a')+1])
         log.info("constant 'a' is: %s" % a)
-    elif mode in ['k_plus_a', '4', 4]:
+    elif mode in ['k_plus_a', '4', 4, 'k_plus_a2', '5', 5]:
         raise Exception("Use switch '-a' to define constant 'a' for simulation mode 'k_plus_a'")
     
     if '--rest' in sys.argv:
@@ -130,7 +131,7 @@ def main(N=500, av_q=20, T=1000000):
     # run simulation and save results
     main_time = time.time()
     res = simulation.get_data_for_qsd(N, T, av_q, q_list)
-    write_object_to_file(res, 'OUT/res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
+    write_object_to_file(res, 'res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
     log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
     return
 
@@ -248,6 +249,19 @@ def check_sd_vs_n(q, N_list):
         log.info("N = %s executed in %s minutes" % (n, round((time.time()-main_time)/60.0, 2)))
     write_object_to_file(res, 'sd_vs_N_q='+str(q)+'_q_times_'+str(av_q)+'_mode='+'BA'+'.data')
 
+def plot_sd(x, y1):
+    plt.scatter(x, y1, color='blue')
+    #plt.scatter(x, y2, color='red')
+    plt.xlim([1, 10000])
+    plt.ylim([0, 1])
+    plt.xscale('log')
+    # plt.yscale('log')
+    plt.show()
+    plt.clf()
+
+def f(x, a, b):
+    return a * (x**(b))
+
 if __name__ == "__main__":
     # q = 5
     # N = [10, 20, 50, 80, 100, 150, 200, 250, 300, 350, 400, 450, 500]
@@ -266,7 +280,7 @@ if __name__ == "__main__":
     Q = []
     for q in q_list:
         try:
-            x, y, z, w = read_object_from_file('cluster500test/q=%s.data' % q)
+            x, y, z, w = read_object_from_file('k_plus_a2_500/q=%s.data' % q)
         except:
             continue
         s.append(x)
@@ -275,20 +289,24 @@ if __name__ == "__main__":
         d_.append(w)
         Q.append(q)
 
-    res = read_object_from_file('res_N=500_q_times_400_mode=cluster.data')
-
-    plt.scatter(res['q'], res['s'], color='blue')
-    plt.scatter(res['q'], res['d'], color='red')
-    plt.scatter(Q, s, color='black')
-    plt.scatter(Q, d, color='black')
-    plt.xlim([1, 10000])
+    # res = read_object_from_file('res_N=500_q_times_400_mode=cluster.data')
+    # popt, pcov = fit(f, Q[27:29], s_[27:29])
+    # plt.scatter(res['q'], res['s'], color='blue')
+    # plt.scatter(res['q'], res['d'], color='red')
+    plt.scatter(Q, s, color='blue')
+    # plt.scatter(Q, d_, color='red')
+    # plt.plot([Q[27], Q[29]], [f(Q[27], popt[0], popt[1]), f(Q[29], popt[0], popt[1])])
+    plt.xlim([1, 1000])
     plt.ylim([0, 1])
     plt.xscale('log')
     # plt.yscale('log')
     plt.show()
+    plt.clf()
 
-    plt.scatter(q_list, s_, color='blue')
-    plt.scatter(q_list, d_, color='red')
+    popt, pcov = fit(f, Q[24:26], s_[24:26])
+
+    plt.scatter(Q, s_, color='blue')
+    plt.scatter(Q, d_, color='red')
     plt.xlim([1, 10000])
     plt.xscale('log')
     plt.show()
