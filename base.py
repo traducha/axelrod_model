@@ -139,23 +139,18 @@ class AxGraph(ig.Graph):
         """
         """
         res = {'domain': True, 'component': True, 'all': True}
-        N = len(self.vs())
-        edges = self.get_edgelist()
-        for i in range(N):
-            for j in range(i+1, N):
-                if res['domain']:
-                    if not (all(self.vs(i)["f"][0] == self.vs(j)["f"][0]) or all(self.vs(i)["f"][0] != self.vs(j)["f"][0])):
-                        res['domain'] = False
-                if res['component'] and (i,j) in edges:
-                    if all(self.vs(i)["f"][0] != self.vs(j)["f"][0]):
-                        res['component'] = False
-                if res['all'] and (i,j) in edges:
-                    if not all(self.vs(i)["f"][0] == self.vs(j)["f"][0]):
-                        res['all'] = False
+        for i, j in self.get_edgelist():
+            if res['domain']:
+                if not (all(self.vs(i)["f"][0] == self.vs(j)["f"][0]) or all(self.vs(i)["f"][0] != self.vs(j)["f"][0])):
+                    res['domain'] = False
+            if res['component']:
+                if all(self.vs(i)["f"][0] != self.vs(j)["f"][0]):
+                    res['component'] = False
+            if res['all']:
+                if not all(self.vs(i)["f"][0] == self.vs(j)["f"][0]):
+                    res['all'] = False
             if not (res['all'] or res['component'] or res['domain']):
                 break
-        if res['all']:
-            res['domain'] = True
         return res
     
     # TODO True jeżeli wszystki możliwe niepołączone pary maja 0 wspólnych atr, a wszystkie połączone maja wszystkie takie same attr lub 0
@@ -406,6 +401,7 @@ def basic_algorithm_multi(mode, f, g, T):
                 return g
     return g
 
+
 def find_times_multi(mode, f, g, T, term):
     """
     @param mode: mode of simulation, defines switching function
@@ -433,18 +429,26 @@ def find_times_multi(mode, f, g, T, term):
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
             vertex_attrs[change_attr] = neighbor_attrs[change_attr]
-        if i > term and i % 10 == 0:
+        if i > term and i % 5000 == 0:
             statics = g.what_is_static()
             for key, value in statics.items():
                 if value and key not in res:
                     res[key] = i
             if statics['all'] and statics['component'] and statics['domain']:
                 break
+    if 'domain' not in res:
+        res['domain'] = T
+    if 'component' not in res:
+        res['component'] = T
+    if 'all' not in res:
+        res['all'] = T
     return res
+
 
 #########################################################################
 # Class holding functions for simulations and values of parameters.     #
 #########################################################################
+
 
 class AxSimulation():
     """Class holding methods for simulating axelrod's model
@@ -824,6 +828,66 @@ class AxSimulation():
             self.try_sleep()
         return res
 
+    def compute_time(self, N, q, T, av_over, term):
+        """This method calls find_times_multi for av_over times
+        and computes time of termalization of component and domain. It uses multiprocessing
+        for spawning child processes.
+        @param N: number of nodes in graph
+        @param q: number of possible values of node's attributes
+        @param T: max number of time steps for base_algorithm
+        @param av_over: number of find_times_multi executions
+        @return float *4: average time for component and domain and their std
+        """
+        time_cluster = []
+        time_domain = []
+        time_all = []
+
+        def append_result(res_times):
+            """This function is called from the main process
+            to append results to lists.
+            @param res_g: object of AxGraph class
+            """
+            time_cluster.append(res_times['component'])
+            time_domain.append(res_times['domain'])
+            time_all.append(res_times['all'])
+            return True
+        pool = Pool(processes=self.processes)
+        for i in range(av_over):
+            g = AxGraph.random_graph_with_attrs(N, self.av_k, self.f, q)
+            pool.apply_async(find_times_multi, args=(self.mode, self.f, g, T, term), callback=append_result)
+        pool.close()
+        pool.join()
+        pool.terminate()
+        res = (np.mean(time_cluster), np.mean(time_domain), np.mean(time_all), np.std(time_cluster),
+               np.std(time_domain), np.std(time_all))
+        write_object_to_file(res, 'time_q='+str(q)+'.data')
+        return res
+
+    def get_times_for_qsd(self, N, T, av_over, q_list, term):
+        """Method with loop over q to get times of termalization of s and d.
+        @param N: number of nodes in graph
+        @param T: number of time steps in base algorithm
+        @param av_over_q: number of repetitions for one q
+        @param q_list: list of q's values to iterate over
+        @return dict: dictionary with lists of q, components and domains and their std
+        """
+        q_list.sort()
+        res = {'q': [], 's': [], 'd': [], 'a': [], 's_std': [], 'd_std': [], 'a_std': []}
+        for q in q_list:
+            start_time = time.time()
+            comp_time, dom_time, all_time, comp_std, dom_std, all_std = self.compute_time(N, q, T, av_over, term)
+            res['q'].append(q)
+            res['s'].append(comp_time)
+            res['d'].append(dom_time)
+            res['a'].append(all_time)
+            res['s_std'].append(comp_std)
+            res['d_std'].append(dom_std)
+            res['a_std'].append(all_std)
+            log.info("computing times for S and D %s times for N = %s, q = %s finished in %s min"\
+                     % (av_over, N, q, round((time.time()-start_time)/60.0, 2)))
+            self.try_sleep()
+        return res
+
     def watch_many_graphs(self, N, T, q_list):
         """Method is calling base_algorithm_watch_graph in loop
         for many values of q and saves results into dictionaries.
@@ -865,6 +929,7 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     sim = AxSimulation('normal', 4.0, 3, 4, [])
     g = AxGraph.random_graph_with_attrs(N=500, q=25)
+    g.what_is_static()
 
     res, g = sim.basic_algorithm_watch_graph(g, 500000)
     print g.get_largest_component()
