@@ -136,7 +136,11 @@ class AxGraph(ig.Graph):
         return True
 
     def what_is_static(self):
-        """
+        """This method finds out whether domain or component
+        can ever change again in coevolving axelrod's simulation.
+        Condition for domain is not closed, but approximately acceptable.
+        It also checks if whole graph is static.
+        @return dict: True or False for 'domain', 'component' and 'all' keys.
         """
         res = {'domain': True, 'component': True, 'all': True}
         for i, j in self.get_edgelist():
@@ -235,6 +239,34 @@ class AxGraph(ig.Graph):
                     uniq[str(j)+'_'+str(i)] = attrs
                     domains[str(j)+'_'+str(i)] = 1
         return len(domains)
+
+    def get_number_of_domains_properly(self):
+        """Returns number of domains in graph.
+        """
+        domains = 0
+        used = []
+
+        def find_more(used, dom, index):
+            neigs = self.neighbors(index)
+            for neig_index in neigs:
+                    m = np.count_nonzero((self.vs(index)["f"][0] == self.vs(neig_index)["f"][0]))
+                    if m == 3 and neig_index not in used:
+                        dom.append(neig_index)
+                        used.append(neig_index)
+                        used, dom = find_more(used, dom, neig_index)
+            return used, dom
+
+        for i in range(len(self.vs())):
+            if i not in used:
+                used.append(i)
+                neigs = self.neighbors(i)
+                if not neigs:
+                    domains += 1
+                    continue
+                dom = [i]
+                used, dom = find_more(used, dom, i)
+                domains += 1
+        return domains
     
 #########################################################################
 # Functions used in running simulation on several processes.            #
@@ -411,6 +443,7 @@ def find_times_multi(mode, f, g, T, term):
     @return: g after applying algorithm
     """
     res = {}
+    last_statics = {'domain': False, 'component': False, 'all': False}
     n = len(g.vs())
     for i in range(T):
         #get one node and randomly select one of it's neighbors
@@ -429,11 +462,12 @@ def find_times_multi(mode, f, g, T, term):
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
             vertex_attrs[change_attr] = neighbor_attrs[change_attr]
-        if i > term and i % 5000 == 0:
+        if i > term and i % 500 == 0:
             statics = g.what_is_static()
             for key, value in statics.items():
-                if value and key not in res:
+                if value and not last_statics[key]:
                     res[key] = i
+            last_statics = statics
             if statics['all'] and statics['component'] and statics['domain']:
                 break
     if 'domain' not in res:
@@ -442,6 +476,43 @@ def find_times_multi(mode, f, g, T, term):
         res['component'] = T
     if 'all' not in res:
         res['all'] = T
+    return res
+
+
+def find_times_multi_properly(mode, f, g, T, term=500000):
+    """
+    @param mode: mode of simulation, defines switching function
+    @param f: number of attributes of nodes
+    @param g: graph to work on
+    @param T: number of time steps
+    @return: g after applying algorithm
+    """
+    res = {}
+    n = len(g.vs())
+    for i in range(T):
+        #get one node and randomly select one of it's neighbors
+        index = int(rand()*n)
+        neigs = g.neighbors(index)
+        if not neigs:
+            continue
+        neig_index = random.choice(neigs)
+        #compare attributes of two nodes
+        vertex_attrs = g.vs(index)["f"][0]
+        neighbor_attrs = g.vs(neig_index)["f"][0]
+        m = np.count_nonzero((vertex_attrs == neighbor_attrs))
+        #decide what to do according to common attributes
+        if m == 0:
+            SWITCH_MAP[mode](g, index, neig_index, n, neigs)
+            res['component'] = i
+        elif m != f and rand() < m*1.0/f:
+            change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
+            vertex_attrs[change_attr] = neighbor_attrs[change_attr]
+            res['domain'] = i
+        if i > term:
+            if i % 50000 == 0:
+                if g.is_static():
+                    break
+    res['all'] = max(res['component'], res['domain'])
     return res
 
 
@@ -854,13 +925,13 @@ class AxSimulation():
         pool = Pool(processes=self.processes)
         for i in range(av_over):
             g = AxGraph.random_graph_with_attrs(N, self.av_k, self.f, q)
-            pool.apply_async(find_times_multi, args=(self.mode, self.f, g, T, term), callback=append_result)
+            pool.apply_async(find_times_multi_properly, args=(self.mode, self.f, g, T, term), callback=append_result)
         pool.close()
         pool.join()
         pool.terminate()
         res = (np.mean(time_cluster), np.mean(time_domain), np.mean(time_all), np.std(time_cluster),
                np.std(time_domain), np.std(time_all))
-        write_object_to_file(res, 'time_q='+str(q)+'.data')
+        write_object_to_file(res, str(self.mode) + '_time_q='+str(q)+'.data')
         return res
 
     def get_times_for_qsd(self, N, T, av_over, q_list, term):
