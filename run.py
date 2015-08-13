@@ -268,10 +268,10 @@ if __name__ == "__main__":
     # check_sd_vs_n(q, N)
 
     q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #71 points in log scale
-    # l = [94, 111, 129, 152, 177, 208, 243, 284, 333, 389, 456]
-    # q_list += [l[i]+(l[i+1]-l[i])/3 for i in range(len(l)-1)]\
-    #             + [l[i]+2*(l[i+1]-l[i])/3 for i in range(len(l)-1)]
-    # q_list = q_list[::3]
+    # # l = [94, 111, 129, 152, 177, 208, 243, 284, 333, 389, 456]
+    # # q_list += [l[i]+(l[i+1]-l[i])/3 for i in range(len(l)-1)]\
+    # #             + [l[i]+2*(l[i+1]-l[i])/3 for i in range(len(l)-1)]
+    # # q_list = q_list[::3]
     q_list.sort()
     s =[]
     d =[]
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     Q = []
     for q in q_list:
         try:
-            x, y, z, w = read_object_from_file('k_plus_a2_500/q=%s.data' % q)
+            x, y, z, w = read_object_from_file('k_plus_a2/N500/q=%s.data' % q)
         except:
             continue
         s.append(x)
@@ -289,19 +289,20 @@ if __name__ == "__main__":
         d_.append(w)
         Q.append(q)
 
-    # res = read_object_from_file('res_N=500_q_times_400_mode=cluster.data')
+    # res = read_object_from_file('res_N=500_q_times_400_mode=k_plus_a2.data')
     # popt, pcov = fit(f, Q[27:29], s_[27:29])
     # plt.scatter(res['q'], res['s'], color='blue')
     # plt.scatter(res['q'], res['d'], color='red')
     plt.scatter(Q, s, color='blue')
-    # plt.scatter(Q, d_, color='red')
+    plt.scatter(Q, d, color='red')
     # plt.plot([Q[27], Q[29]], [f(Q[27], popt[0], popt[1]), f(Q[29], popt[0], popt[1])])
-    plt.xlim([1, 1000])
+    plt.xlim([1, 10000])
     plt.ylim([0, 1])
     plt.xscale('log')
     # plt.yscale('log')
     plt.show()
     plt.clf()
+    pass
 
     popt, pcov = fit(f, Q[24:26], s_[24:26])
 

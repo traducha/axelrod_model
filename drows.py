@@ -7,28 +7,32 @@ import base
 import run
 
 
+q_list = [int(1.17**i) for i in range(2, 59) if int(1.17**i) != int(1.17**(i-1))]
+q_list.sort()
+c = ['blue', 'red', 'green', 'yellow', 'purple']
+
 if __name__ == "__main__":
-    sim = base.AxSimulation('k_plus_a2', 4.0, 3, 4, [])
-    base.__a = 1
-    sim.set_a(1)
-    # g = base.AxGraph.random_graph_with_attrs(N=1000, q=9000)
-    # g = sim.basic_algorithm(g, 4000000)
+    for i, N in enumerate([500, 1000, 1500, 2000]):
+        s = []
+        d = []
+        s_ = []
+        d_ = []
+        Q = []
+        for q in q_list:
+            try:
+                x, y, z, w = base.read_object_from_file('k_plus_a/N' + str(N) + '/q=%s.data' % q)
+            except:
+                continue
+            s.append(x)
+            d.append(y)
+            s_.append(z)
+            d_.append(w)
+            Q.append(q)
 
-    k = {}
-    for i in range(100):
-        print i
-        g = base.AxGraph.random_graph_with_attrs(N=500, q=21)
-        g = sim.basic_algorithm(g, 1000000)
-        for x, _, y in g.degree_distribution().bins():
-            if x in k:
-                k[x] += y
-            else:
-                k[x] = y
-    base.write_object_to_file(k, 'rozklad_k_k222plusa1_500_q21_sr_po100___')
-
-    print k
-    plt.scatter(k.keys()[1:], k.values()[1:])
-    plt.ylim([1, 15000])
+        plt.plot(Q, s, color=c[i])
+        # plt.scatter(Q, d, color='red')
+    plt.xlim([1, 10000])
+    plt.ylim([0, 1])
     plt.xscale('log')
-    plt.yscale('log')
     plt.show()
+    plt.clf()
