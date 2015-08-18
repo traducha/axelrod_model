@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
 
+import matplotlib
+matplotlib.rcParams.update({'font.family': 'times new roman'})
 import matplotlib.pyplot as plt
 import logging as log
 import numpy as np
@@ -30,7 +32,7 @@ if __name__ == '__main__' and 0:
 
 
 r = {}
-res = base.read_object_from_file('cluster_times_N=500_av=500.data')
+res = base.read_object_from_file('times/k_plus_a_times_N=500_av=500.data')
 for key, value in res.items():
     if key != 'q':
         r[key] = list(np.array(value) / 500.0)
@@ -38,7 +40,7 @@ for key, value in res.items():
         r[key] = value
 
 
-limit = r['q'].index(99) + 1
+limit = r['q'].index(150) + 1
 
 # main plot for times
 fig = plt.figure()
@@ -64,7 +66,7 @@ infig_position = transFigure.transform(inax_position)
 x = infig_position[0]
 y = infig_position[1]
 width *= rect[2]
-height *= rect[3]  # <= Typo was here
+height *= rect[3]
 subax = fig.add_axes([x, y, width, height], axisbg='w')
 x_labelsize = subax.get_xticklabels()[0].get_size()
 y_labelsize = subax.get_yticklabels()[0].get_size()

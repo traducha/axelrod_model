@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
 
+import matplotlib
+matplotlib.rcParams.update({'font.family': 'serif'})
 import matplotlib.pyplot as plt
 import logging as log
 import numpy as np
@@ -58,12 +60,22 @@ def plot_comps(dist, mode, q):
     plt.ylim(ymin=min(dist.values())/2.0)
     plt.ylim(ymax=max(dist.values())*2.0)
     plt.show()
+    # plt.savefig('komponenty/' + mode + '_components_N500_q' + str(q) + '_av3000_hist4.png')
     plt.clf()
 
 if __name__ == '__main__':
-    components_dis_for_modes_and_q(q_list, modes, av_over)
-    # dist = {}
-    # r = base.read_object_from_file('normal_clustering_N500_q22_av500.data')
-    # for i in range(int(len(r)/2.0)):
-    #     dist[r.keys()[i]] = r.values()[i] + r.values()[i+1]
-    # plot_comps(r, modes[0], q_list[0])
+    # components_dis_for_modes_and_q(q_list, modes, av_over)
+
+    # for mode in modes:
+    #     for q in q_list:
+    #         dist = {}
+    #         r = base.read_object_from_file('komponenty/' + mode + '_components_N500_q' + str(q) + '_av3000.data')
+    #         for i in range(int(len(r)/4.0)):
+    #             dist[r.keys()[i*4]] = r.values()[i] + r.values()[i+1] + r.values()[i+2] + r.values()[i+3]
+    #         plot_comps(dist, mode, q)
+
+    for mode in modes:
+        for q in q_list:
+            dist = {}
+            r = base.read_object_from_file('komponenty/' + mode + '_clustering_N500_q' + str(q) + '_av3000.data')
+            print mode, 'q=' + str(q), r['global'], r['av_local_nan'], r['av_local_zero']
