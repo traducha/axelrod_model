@@ -56,7 +56,7 @@ for i, mode in enumerate(modes):
     y = r.values()
     popt, pcov = fit(f, x[3:], y[3:])
     ax = fig.add_subplot(mode_sublot[mode])
-    ax.scatter(x, y)
+    ax.scatter(x, y, facecolors='none', edgecolors='b')
     ax.plot([x[3], x[200]], [f(x[3], popt[0] * 8, popt[1]), f(x[200], popt[0] * 8, popt[1])], '--', color='black')
     ax.text(25, f(x[25], popt[0] * 15, popt[1]), r'$\alpha = {}$'.format(round(-popt[1], 2)), fontsize=14)
     if i in [2, 3]:
@@ -69,4 +69,5 @@ for i, mode in enumerate(modes):
     ax.set_ylim(ymin=min(r.values()) / 2.0)
     ax.set_ylim(ymax=max(r.values()) * 2.0)
 
+# plt.savefig('/home/tomaszraducha/Pulpit/components.pdf', format='pdf', bbox_inches='tight')
 plt.show()
