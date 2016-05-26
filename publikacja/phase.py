@@ -72,4 +72,3 @@ def draw(_type):
 types = type_constants.keys()
 for t in types:
     draw(t)
-    break
