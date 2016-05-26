@@ -55,14 +55,16 @@ def draw(_type):
 
     plt.scatter(Q, d, facecolors='none', edgecolors='r')
     plt.scatter(Q, s, color='blue')
-    plt.plot(Q, clust_global, 'g-')
-    plt.plot(Q, clust_local, '--', color='#ff5e00')
+    plt.plot(Q, clust_local, 'g--')
+    plt.plot(Q, clust_global, '-', color='#ff5e00')
     plt.plot([type_constants[_type]['first'], type_constants[_type]['first']], [0.0, 1.0], color='black')
     plt.plot([type_constants[_type]['second'], type_constants[_type]['second']], [0.0, 1.0], color='black')
     plt.xlim([1, 10000])
     plt.ylim([0, 1])
     plt.xscale('log')
-    # plt.yscale('log')
+    plt.xlabel('$q$', fontsize=14)
+    plt.ylabel('$S/N, D/N, C$', fontsize=14)
+    # plt.subplots_adjust(wspace=0.0, hspace=0.0)
     plt.show()
     plt.clf()
 
@@ -70,3 +72,4 @@ def draw(_type):
 types = type_constants.keys()
 for t in types:
     draw(t)
+    break
