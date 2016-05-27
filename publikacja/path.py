@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #-*- coding: utf-8 -*-
 
 import matplotlib as mpl
@@ -88,6 +89,7 @@ for i, mode in enumerate(modes):
         ax.set_ylabel(r'$\langle l \rangle$', fontsize=14)
 
 plt.tight_layout()
-plt.savefig('/home/tomaszraducha/Pulpit/path.pdf', format='pdf', bbox_inches='tight')
+# for end in ['pdf', 'svg']:
+#     plt.savefig('/home/tomaszraducha/Pulpit/path.{}'.format(end), format=end, bbox_inches='tight')
 plt.show()
 plt.clf()

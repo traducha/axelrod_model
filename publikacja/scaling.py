@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #-*- coding: utf-8 -*-
 
 import matplotlib as mpl
@@ -33,18 +34,19 @@ def draw(mode):
             except Exception as e:
                 print('NIE WCZYTAŁO DLA Q={}, BO {}'.format(q, e))
                 continue
-            s.append(x)
-            Q.append(q)
+            s.append(x*(n**0.15))
+            Q.append(q/(n**0.511))
         plt.scatter(Q, s, marker=styles[i], color=colors[i], s=20*2)
 
-    plt.xlim([1, 10000])
-    plt.ylim([0, 1])
+    plt.xlim([0.01, 1000])
+    #plt.ylim([0, 1])
     plt.xscale('log')
     plt.xlabel('$q$', fontsize=14)
     plt.ylabel('$S/N$', fontsize=14)
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
     plt.tight_layout()
-    # plt.savefig('/home/tomaszraducha/Pulpit/scaling.pdf', format='pdf', bbox_inches='tight')  # TODO save also as emf and svg
+    # for end in ['pdf', 'svg']:
+    #     plt.savefig('/home/tomaszraducha/Pulpit/scaling.{}'.format(end), format=end, bbox_inches='tight')
     plt.show()
     plt.clf()
 

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #-*- coding: utf-8 -*-
 
 import matplotlib as mpl
@@ -66,7 +67,8 @@ def draw(_type):
     plt.ylabel('$S/N, D/N, C$', fontsize=14)
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
     plt.tight_layout()
-    # plt.savefig('/home/tomaszraducha/Pulpit/{}_c.pdf'.format(_type), format='pdf', bbox_inches='tight')
+    # for end in ['pdf', 'svg']:
+    #     plt.savefig('/home/tomaszraducha/Pulpit/{}_c.{}'.format(_type, end), format=end, bbox_inches='tight')
     plt.show()
     plt.clf()
 
