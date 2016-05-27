@@ -4,7 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from base import *
 mpl.rcParams['font.family'] = 'serif'
-print(mpl.rcParams['figure.figsize'])  # default is [8, 6]
+print(mpl.rcParams['figure.figsize'])  # TODO default is [8, 6]
 
 
 mapping = {
@@ -43,7 +43,8 @@ def draw(mode):
     plt.xlabel('$q$', fontsize=14)
     plt.ylabel('$S/N$', fontsize=14)
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
-    plt.savefig('/home/tomaszraducha/Pulpit/scaling.pdf', format='pdf', bbox_inches='tight')
+    plt.tight_layout()
+    # plt.savefig('/home/tomaszraducha/Pulpit/scaling.pdf', format='pdf', bbox_inches='tight')  # TODO save also as emf and svg
     plt.show()
     plt.clf()
 

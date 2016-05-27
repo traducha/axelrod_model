@@ -65,6 +65,7 @@ def draw(_type):
     plt.xlabel('$q$', fontsize=14)
     plt.ylabel('$S/N, D/N, C$', fontsize=14)
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
+    plt.tight_layout()
     # plt.savefig('/home/tomaszraducha/Pulpit/{}_c.pdf'.format(_type), format='pdf', bbox_inches='tight')
     plt.show()
     plt.clf()

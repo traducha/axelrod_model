@@ -69,5 +69,6 @@ for i, mode in enumerate(modes):
     ax.set_ylim(ymin=min(r.values()) / 2.0)
     ax.set_ylim(ymax=max(r.values()) * 2.0)
 
+plt.tight_layout()
 # plt.savefig('/home/tomaszraducha/Pulpit/components.pdf', format='pdf', bbox_inches='tight')
 plt.show()
