@@ -66,14 +66,14 @@ for i, p in enumerate(plots):
         ax.set_xlim([xmin, xmax])
     elif p[0] == 'BA':
         ax.set_xlim([0, 70])
-        ax.plot(k3.keys(), e(k3.keys()), 'k--')
+        ax.plot(k3.keys(), e(k3.keys()), 'k-')
     elif p[0] == 'k_plus_a':
         ax.set_xlim([0, 40])
-        ax.plot(k3.keys(), e(k3.keys()), 'k--')
+        ax.plot(k3.keys(), e(k3.keys()), 'k-')
     elif p[0] == 'cluster':
         ax.set_yscale('log')
         ax.set_xlim([0, 32])
-        ax.plot(k3.keys(), e(k3.keys()), 'k--')
+        ax.plot(k3.keys(), e(k3.keys()), 'k-')
 
     if i in [0, 2, 4]:
         ax.set_ylabel(r'$P(k)$', fontsize=14)

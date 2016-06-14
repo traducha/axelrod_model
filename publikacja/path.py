@@ -39,7 +39,7 @@ def plot_path(mode):
         plt.plot(range(410, 4100, 2), ln(range(410, 4100, 2), popt[0]), 'k--')
     elif mode == 'cluster':
         popt, pcov = fit(lin, N_list, y)
-        plt.plot(range(410, 4100, 2), lin(range(410, 4100, 2), popt[0], popt[1]), 'k--')
+        plt.plot(range(410, 4100, 2), lin(range(410, 4100, 2), popt[0], popt[1]), 'k-')
 
     plt.xlim([300, 4200])
     plt.xlabel(r'$N$', fontsize=14)
@@ -67,7 +67,7 @@ for i, mode in enumerate(modes):
         ax.plot(range(410, 4100, 2), ln(range(410, 4100, 2), popt[0]), 'k--')
     elif mode == 'cluster':
         popt, pcov = fit(lin, N_list, y)
-        ax.plot(range(410, 4100, 2), lin(range(410, 4100, 2), popt[0], popt[1]), 'k--')
+        ax.plot(range(410, 4100, 2), lin(range(410, 4100, 2), popt[0], popt[1]), 'k-')
 
     if mode == 'k_plus_a':
         ax.set_ylim([4.3, 6.2])
