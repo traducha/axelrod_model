@@ -88,6 +88,10 @@ for i, mode in enumerate(modes):
     if i in [0, 2]:
         ax.set_ylabel(r'$\langle l \rangle$', fontsize=14)
 
+    # zmiana rozmiaru czcionki tiksów !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ##################################################################
+    # ax.tick_params(axis='both', which='major', labelsize=20)
+    ##################################################################
 plt.tight_layout()
 # for end in ['pdf', 'svg']:
 #     plt.savefig('/home/tomaszraducha/Pulpit/path.{}'.format(end), format=end, bbox_inches='tight')
