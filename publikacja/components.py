@@ -72,6 +72,9 @@ for i, mode in enumerate(modes):
     ax.set_ylim(ymax=max(r.values()) * 2.0)
     ax.get_yaxis().set_ticks([0.001, 0.1, 10])
     ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
+    for tick in ax.xaxis.get_majorticklabels():
+        # tick.set_verticalalignment("top")
+        tick.set_y(-0.01)
 
 
 plt.tight_layout()

@@ -92,9 +92,11 @@ for i, p in enumerate(plots):
         ax.get_xaxis().set_ticks([0, 10, 20, 30])
     ax.get_yaxis().set_ticks([0.00001, 0.001, 0.1])
     ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
+    for tick in ax.xaxis.get_majorticklabels():
+        tick.set_y(-0.01)
 
 
 plt.tight_layout()
-# for end in ['pdf', 'svg']:
-#     plt.savefig('/home/tomaszraducha/Pulpit/degree.{}'.format(end), format=end, bbox_inches='tight')
+for end in ['pdf', 'svg']:
+    plt.savefig('/home/tomaszraducha/Pulpit/degree.{}'.format(end), format=end, bbox_inches='tight')
 plt.show()

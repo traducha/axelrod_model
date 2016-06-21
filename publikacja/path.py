@@ -96,6 +96,10 @@ for i, mode in enumerate(modes):
     ##################################################################
     ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
     ##################################################################
+    for tick in ax.xaxis.get_majorticklabels():
+        tick.set_y(-0.01)
+    for tick in ax.yaxis.get_majorticklabels():
+        tick.set_x(-0.01)
 
 plt.tight_layout()
 # for end in ['pdf', 'svg']:

@@ -28,6 +28,8 @@ q_list.sort()
 
 
 def draw(mode):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
     for i, n in enumerate(N):
         s, Q = [], []
         for q in q_list:
@@ -38,18 +40,23 @@ def draw(mode):
                 continue
             s.append(x)#*(n**0.15))
             Q.append(q)#/(n**0.511))
-        plt.scatter(Q, s, marker=styles[i], color=colors[i], s=20*2)
+        ax.scatter(Q, s, marker=styles[i], color=colors[i], s=20*2)
 
-    plt.xlim([1, 10000])
-    plt.ylim([0, 1])
-    plt.xscale('log')
-    plt.xlabel('$q$', fontsize=axsize)
-    plt.ylabel('$S/N$', fontsize=axsize)
+    ax.set_xlim([1, 10000])
+    ax.set_ylim([0, 1])
+    ax.set_xscale('log')
+    ax.set_xlabel('$q$', fontsize=axsize)
+    ax.set_ylabel('$S/N$', fontsize=axsize)
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
-    plt.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
+    ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
+    for tick in ax.xaxis.get_majorticklabels():
+        tick.set_y(-0.01)
+    for tick in ax.yaxis.get_majorticklabels():
+        tick.set_x(-0.01)
+
     plt.tight_layout()
-    # for end in ['pdf', 'svg']:
-    #     plt.savefig('/home/tomaszraducha/Pulpit/scaling.{}'.format(end), format=end, bbox_inches='tight')
+    for end in ['pdf', 'svg']:
+        plt.savefig('/home/tomaszraducha/Pulpit/scaling.{}'.format(end), format=end, bbox_inches='tight')
     plt.show()
     plt.clf()
 
