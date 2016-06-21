@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from base import *
 mpl.rcParams['font.family'] = 'serif'
 
+ticksize = 14 / 0.8
+axsize = 16 / 0.8
 
 type_constants = {
     'BA': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/BA/N500',
@@ -63,9 +65,10 @@ def draw(_type):
     plt.xlim([1, 10000])
     plt.ylim([0, 1])
     plt.xscale('log')
-    plt.xlabel('$q$', fontsize=17.5)
-    plt.ylabel('$S/N, D/N, C$', fontsize=17.5)
+    plt.xlabel('$q$', fontsize=axsize)
+    plt.ylabel('$S/N, D/N, C$', fontsize=axsize)
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
+    plt.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
     plt.tight_layout()
     # for end in ['pdf', 'svg']:
     #     plt.savefig('/home/tomaszraducha/Pulpit/{}_c.{}'.format(_type, end), format=end, bbox_inches='tight')

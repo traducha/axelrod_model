@@ -7,7 +7,8 @@ import matplotlib as mpl
 from scipy.optimize import curve_fit as fit
 mpl.rcParams['font.family'] = 'serif'
 
-
+ticksize = 14
+axsize = 16
 modes = ['BA', 'k_plus_a', 'k_plus_a2', 'cluster']
 
 mapping = {
@@ -59,16 +60,19 @@ for i, mode in enumerate(modes):
     ax = fig.add_subplot(mode_sublot[mode])
     ax.scatter(x, y, facecolors='none', edgecolors='b')
     ax.plot([x[3], x[200]], [f(x[3], popt[0] * 8, popt[1]), f(x[200], popt[0] * 8, popt[1])], '--', color='black')
-    ax.text(25, f(x[25], popt[0] * 15, popt[1]), r'$\alpha = {}$'.format(round(-popt[1], 2)), fontsize=14)
+    ax.text(25, f(x[25], popt[0] * 15, popt[1]), r'$\alpha = {}$'.format(round(-popt[1], 2)), fontsize=axsize)
     if i in [2, 3]:
-        ax.set_xlabel('$S$', fontsize=14)
+        ax.set_xlabel('$S$', fontsize=axsize)
     if i in [0, 2]:
-        ax.set_ylabel(r'$P(S)$', fontsize=14)
+        ax.set_ylabel(r'$P(S)$', fontsize=axsize)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlim(xmin=0.8)
     ax.set_ylim(ymin=min(r.values()) / 2.0)
     ax.set_ylim(ymax=max(r.values()) * 2.0)
+    ax.get_yaxis().set_ticks([0.001, 0.1, 10])
+    ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
+
 
 plt.tight_layout()
 # for end in ['pdf', 'svg']:

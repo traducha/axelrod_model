@@ -8,6 +8,8 @@ mpl.rcParams['font.family'] = 'serif'
 print(mpl.rcParams['figure.figsize'])  # TODO default is [8, 6]
 
 
+ticksize = 14
+axsize = 16
 mapping = {
     'cluster': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/cluster',
                 'first': 3,
@@ -34,16 +36,17 @@ def draw(mode):
             except Exception as e:
                 print('NIE WCZYTAŁO DLA Q={}, BO {}'.format(q, e))
                 continue
-            s.append(x*(n**0.15))
-            Q.append(q/(n**0.511))
+            s.append(x)#*(n**0.15))
+            Q.append(q)#/(n**0.511))
         plt.scatter(Q, s, marker=styles[i], color=colors[i], s=20*2)
 
-    plt.xlim([0.01, 1000])
-    #plt.ylim([0, 1])
+    plt.xlim([1, 10000])
+    plt.ylim([0, 1])
     plt.xscale('log')
-    plt.xlabel('$q$', fontsize=14)
-    plt.ylabel('$S/N$', fontsize=14)
+    plt.xlabel('$q$', fontsize=axsize)
+    plt.ylabel('$S/N$', fontsize=axsize)
     # plt.subplots_adjust(wspace=0.0, hspace=0.0)
+    plt.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
     plt.tight_layout()
     # for end in ['pdf', 'svg']:
     #     plt.savefig('/home/tomaszraducha/Pulpit/scaling.{}'.format(end), format=end, bbox_inches='tight')

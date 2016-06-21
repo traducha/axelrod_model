@@ -10,6 +10,8 @@ mpl.rcParams['font.family'] = 'serif'
 print(mpl.rcParams['figure.figsize'])  # default is [8, 6]
 
 
+ticksize = 14
+axsize = 16
 modes = ['BA', 'k_plus_a', 'k_plus_a2', 'cluster']
 N_list = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000]
 
@@ -84,14 +86,17 @@ for i, mode in enumerate(modes):
     ax.set_xticks([1000, 2000, 3000, 4000])
     ax.set_xlim([300, 4300])
     if i in [2, 3]:
-        ax.set_xlabel(r'$N$', fontsize=14)
+        ax.set_xlabel(r'$N$', fontsize=axsize)
     if i in [0, 2]:
-        ax.set_ylabel(r'$\langle l \rangle$', fontsize=14)
+        ax.set_ylabel(r'$\langle l \rangle$', fontsize=axsize)
 
+    if i == 2:
+        ax.get_yaxis().set_ticks([2.9, 3.1, 3.3, 3.5])
     # zmiana rozmiaru czcionki tiksów !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ##################################################################
-    # ax.tick_params(axis='both', which='major', labelsize=20)
+    ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
     ##################################################################
+
 plt.tight_layout()
 # for end in ['pdf', 'svg']:
 #     plt.savefig('/home/tomaszraducha/Pulpit/path.{}'.format(end), format=end, bbox_inches='tight')

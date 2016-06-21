@@ -11,6 +11,10 @@ print(mpl.rcParams['figure.figsize'])  # default is [8, 6]
 mpl.rcParams['figure.figsize'] = [8.0, 8.0]
 
 
+ticksize = 14
+axsize = 16
+
+
 def f(x, a, b):
     return a * (x**b)
 
@@ -61,7 +65,7 @@ for i, p in enumerate(plots):
         x, y = k3.keys(), k3.values()
         popt, pcov = fit(f, x[6:], y[6:])
         ax.plot([x[3], x[115]], [f(x[3], popt[0] * 15, popt[1]), f(x[115], popt[0] * 15, popt[1])], '--', color='black')
-        ax.text(25, f(x[25], popt[0] * 30, popt[1]), r'$\alpha = {}$'.format(round(-popt[1], 2)), fontsize=14)
+        ax.text(25, f(x[25], popt[0] * 30, popt[1]), r'$\alpha = {}$'.format(round(-popt[1], 2)), fontsize=axsize)
         ax.set_xscale('log')
         ax.set_xlim([xmin, xmax])
     elif p[0] == 'BA':
@@ -76,9 +80,19 @@ for i, p in enumerate(plots):
         ax.plot(k3.keys(), e(k3.keys()), 'k-')
 
     if i in [0, 2, 4]:
-        ax.set_ylabel(r'$P(k)$', fontsize=14)
+        ax.set_ylabel(r'$P(k)$', fontsize=axsize)
     if i > 3:
-        ax.set_xlabel(r'$k$', fontsize=14)
+        ax.set_xlabel(r'$k$', fontsize=axsize)
+
+    if i == 0:
+        ax.get_xaxis().set_ticks([0, 20, 40, 60])
+    elif i == 1:
+        ax.get_xaxis().set_ticks([0, 10, 20, 30, 40])
+    elif i == 5:
+        ax.get_xaxis().set_ticks([0, 10, 20, 30])
+    ax.get_yaxis().set_ticks([0.00001, 0.001, 0.1])
+    ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
+
 
 plt.tight_layout()
 # for end in ['pdf', 'svg']:
