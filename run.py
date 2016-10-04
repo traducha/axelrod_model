@@ -10,6 +10,7 @@ import base
 from base import *
 from scipy.optimize import curve_fit as fit
 
+
 def loop_over_q():
     """This function makes several things. Goal is to visualize
     some behavior of graphs in simulation. Function uses multiprocessing
@@ -57,6 +58,7 @@ def loop_over_q():
     write_clusters_to_file(clusters, name='OUT/clusters.txt')
     return True
 
+
 def plot_sd_vs_q(name):
     """Use in interacive mode to plot results.
     @param name: name of file with data
@@ -69,6 +71,7 @@ def plot_sd_vs_q(name):
     plt.xscale('log')
     plt.show()
     return True
+
 
 def watch_one_graph(g, T):
     """This function runs simulation for one graph
@@ -96,44 +99,6 @@ def watch_one_graph(g, T):
     plt.savefig('play_in_time_N='+str(N)+'.png', format="png")
     return res
 
-def main(N=500, av_q=20, T=1000000):
-    log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-    # read initial arguments
-    if '-p' in sys.argv:
-        processes = int(sys.argv[sys.argv.index('-p')+1])
-        log.info("%s child processes will be spawn" % processes)
-    else:
-        raise Exception("Use switch '-p' to define number of processes")
-    
-    if '-m' in sys.argv:
-        mode = sys.argv[sys.argv.index('-m')+1]
-        log.info("mode of simulation is: %s" % mode)
-    else:
-        raise Exception("Use switch '-m' to define mode of simulation")
-
-    if '-a' in sys.argv:
-        a = int(sys.argv[sys.argv.index('-a')+1])
-        log.info("constant 'a' is: %s" % a)
-    elif mode in ['k_plus_a', '4', 4, 'k_plus_a2', '5', 5]:
-        raise Exception("Use switch '-a' to define constant 'a' for simulation mode 'k_plus_a'")
-    
-    if '--rest' in sys.argv:
-        rest = sys.argv[sys.argv.index('--rest')+1]
-        rest = [float(i) for i in rest.split('-')]
-        log.info("rest mode is: %s" % rest)
-    else:
-        rest = []
-    # set simulation parameters
-    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
-    simulation = AxSimulation(mode, 4.0, 3, processes, rest)
-    simulation.set_a(a)
-    base.__a = a
-    # run simulation and save results
-    main_time = time.time()
-    res = simulation.get_data_for_qsd(N, T, av_q, q_list)
-    write_object_to_file(res, 'res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
-    log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
-    return
 
 def watch_graphs():
     q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
@@ -156,6 +121,7 @@ def get_distribution(values):
         else:
             res[value] = 1
     return [int(x) for x, y in res.items()], [y for x, y in res.items()]
+
 
 def plot_graphs():
     q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
@@ -239,6 +205,7 @@ def plot_graphs():
         print 'narysowało dla q = ' + str(q)
     return
 
+
 def check_sd_vs_n(q, N_list):
     res = {}
     av_q = 4
@@ -248,6 +215,7 @@ def check_sd_vs_n(q, N_list):
         res[n] = simulation.get_data_for_qsd(n, 500000, av_q, [q])
         log.info("N = %s executed in %s minutes" % (n, round((time.time()-main_time)/60.0, 2)))
     write_object_to_file(res, 'sd_vs_N_q='+str(q)+'_q_times_'+str(av_q)+'_mode='+'BA'+'.data')
+
 
 def plot_sd(x, y1):
     plt.scatter(x, y1, color='blue')
@@ -259,10 +227,56 @@ def plot_sd(x, y1):
     plt.show()
     plt.clf()
 
+
 def f(x, a, b):
     return a * (x**(b))
 
+
+def main(N=500, av_q=20, T=1000000):
+    log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
+    # read initial arguments
+    if '-p' in sys.argv:
+        processes = int(sys.argv[sys.argv.index('-p')+1])
+        log.info("%s child processes will be spawn" % processes)
+    else:
+        raise Exception("Use switch '-p' to define number of processes")
+
+    if '-m' in sys.argv:
+        mode = sys.argv[sys.argv.index('-m')+1]
+        log.info("mode of simulation is: %s" % mode)
+    else:
+        raise Exception("Use switch '-m' to define mode of simulation")
+
+    if '-a' in sys.argv:
+        a = int(sys.argv[sys.argv.index('-a')+1])
+        log.info("constant 'a' is: %s" % a)
+    elif mode in ['k_plus_a', '4', 4, 'k_plus_a2', '5', 5]:
+        raise Exception("Use switch '-a' to define constant 'a' for simulation mode 'k_plus_a'")
+
+    if '--rest' in sys.argv:
+        rest = sys.argv[sys.argv.index('--rest')+1]
+        rest = [float(i) for i in rest.split('-')]
+        log.info("rest mode is: %s" % rest)
+    else:
+        rest = []
+    # set simulation parameters
+    q_list = [int(1.17**i) for i in range(2,59) if int(1.17**i) != int(1.17**(i-1))] #51 points in log scale
+    simulation = AxSimulation(mode, 4.0, 3, processes, rest)
+    simulation.set_a(a)
+    base.__a = a
+    # run simulation and save results
+    main_time = time.time()
+    res = simulation.get_data_for_qsd(N, T, av_q, q_list)
+    write_object_to_file(res, 'res_N='+str(N)+'_q_times_'+str(av_q)+'_mode='+mode+'.data')
+    log.info("main function executed in %s minutes" % round((time.time()-main_time)/60.0, 2))
+    return
+
+
 if __name__ == "__main__":
+    main()
+
+
+def trash():
     # q = 5
     # N = [10, 20, 50, 80, 100, 150, 200, 250, 300, 350, 400, 450, 500]
     # check_sd_vs_n(q, N)

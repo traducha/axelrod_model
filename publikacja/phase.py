@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from base import *
 mpl.rcParams['font.family'] = 'serif'
 
-ticksize = 14 / 0.8
-axsize = 16 / 0.8
+ticksize = 14 * 0.75 / 0.5
+axsize = 16 * 0.75 / 0.5
 
 type_constants = {
     'BA': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/BA/N500',

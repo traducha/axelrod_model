@@ -7,11 +7,11 @@ import time
 import base
 
 log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
-N = 1000 # 500
+N = 500
 T = 3000000
 processes = 12
 q_list = [2, 80, 150, 5000]
-av_over = 100
+av_over = 400
 modes = ['normal', 'BA', 'cluster', 'k_plus_a', 'k_plus_a2']
 
 
