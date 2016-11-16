@@ -3,6 +3,7 @@
 
 import matplotlib.pyplot as plt
 import base
+import numpy as np
 import matplotlib as mpl
 from scipy.optimize import curve_fit as fit
 mpl.rcParams['font.family'] = 'serif'
@@ -61,6 +62,18 @@ for i, mode in enumerate(modes):
     ax.scatter(x, y, facecolors='none', edgecolors='b')
     ax.plot([x[3], x[200]], [f(x[3], popt[0] * 8, popt[1]), f(x[200], popt[0] * 8, popt[1])], '--', color='black')
     ax.text(25, f(x[25], popt[0] * 15, popt[1]), r'$\alpha = {}$'.format(round(-popt[1], 2)), fontsize=axsize)
+
+    from_top = 100 * np.log10(max(r.values()) / min(r.values())) / 1000.0  # first number is a distance from the top
+    absolute = 10 ** (np.log10(max(r.values())) - from_top)
+    if i == 0:
+        ax.text(500, absolute, r'A', fontsize=axsize)
+    elif i == 1:
+        ax.text(500, absolute, r'B', fontsize=axsize)
+    elif i == 2:
+        ax.text(500, absolute, r'C', fontsize=axsize)
+    elif i == 3:
+        ax.text(500, absolute, r'D', fontsize=axsize)
+
     if i in [2, 3]:
         ax.set_xlabel('$S$', fontsize=axsize)
     if i in [0, 2]:

@@ -71,15 +71,20 @@ for i, mode in enumerate(modes):
         popt, pcov = fit(lin, N_list, y)
         ax.plot(range(410, 4100, 2), lin(range(410, 4100, 2), popt[0], popt[1]), 'k-')
 
+    ymin, ymax = 0, 10
     if mode == 'k_plus_a':
+        ymin, ymax = 4.3, 6.2
         ax.set_ylim([4.3, 6.2])
     elif mode == 'cluster':
+        ymin, ymax = 7.5, 26
         ax.set_ylim([7.5, 26])
         ax.set_yticks([8, 12, 16, 20, 24])
     elif mode == 'BA':
+        ymin, ymax = 4.1, 5.83
         ax.set_ylim([4.1, 5.83])
         ax.set_yticks([4.2, 4.6, 5.0, 5.4, 5.8])
     elif mode == 'k_plus_a2':
+        ymin, ymax = 2.9, 3.55
         ax.set_ylim([2.9, 3.55])
 
     # ax.set_xticks([500, 1500, 2500, 3500])
@@ -89,6 +94,17 @@ for i, mode in enumerate(modes):
         ax.set_xlabel(r'$N$', fontsize=axsize)
     if i in [0, 2]:
         ax.set_ylabel(r'$\langle l \rangle$', fontsize=axsize)
+
+    from_top = 150 * (ymax - ymin) / 1000.0  # first number is a distance from the top
+    absolute = ymax - from_top
+    if i == 0:
+        ax.text(1000, absolute, r'A', fontsize=axsize)
+    elif i == 1:
+        ax.text(1000, absolute, r'B', fontsize=axsize)
+    elif i == 2:
+        ax.text(1000, absolute, r'C', fontsize=axsize)
+    elif i == 3:
+        ax.text(1000, absolute, r'D', fontsize=axsize)
 
     if i == 2:
         ax.get_yaxis().set_ticks([2.9, 3.1, 3.3, 3.5])

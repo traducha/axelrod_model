@@ -69,20 +69,44 @@ for i, p in enumerate(plots):
         ax.set_xscale('log')
         ax.set_xlim([xmin, xmax])
     elif p[0] == 'BA':
-        ax.set_xlim([0, 70])
+        xmin, xmax = 0, 70
+        ax.set_xlim([xmin, xmax])
         ax.plot(k3.keys(), e(k3.keys()), 'k-')
     elif p[0] == 'k_plus_a':
-        ax.set_xlim([0, 40])
+        xmin, xmax = 0, 40
+        ax.set_xlim([xmin, xmax])
         ax.plot(k3.keys(), e(k3.keys()), 'k-')
     elif p[0] == 'cluster':
+        xmin, xmax = 0, 32
         ax.set_yscale('log')
-        ax.set_xlim([0, 32])
+        ax.set_xlim([xmin, xmax])
         ax.plot(k3.keys(), e(k3.keys()), 'k-')
 
     if i in [0, 2, 4]:
         ax.set_ylabel(r'$P(k)$', fontsize=axsize)
     if i > 3:
         ax.set_xlabel(r'$k$', fontsize=axsize)
+
+    from_top = 910 * np.log10(max(k1.values()) / ymin) / 1000.0  # first number is a distance from the top
+    absolute = 10 ** (np.log10(max(k1.values())) - from_top)
+    if p[0] == 'k_plus_a2':
+        from_left_log = 50 * np.log10(xmax / xmin) / 1000.0
+        x_absolute_log = 10 ** (np.log10(xmin) + from_left_log)
+    else:
+        from_left = 50 * (xmax - xmin) / 1000.0
+        x_absolute = xmin + from_left
+    if i == 0:
+        ax.text(x_absolute, absolute, r'A, $q=80$', fontsize=axsize)
+    elif i == 1:
+        ax.text(x_absolute, absolute, r'B, $q=5000$', fontsize=axsize)
+    elif i == 2:
+        ax.text(x_absolute_log, absolute, r'C, $q=2$', fontsize=axsize)
+    elif i == 3:
+        ax.text(x_absolute_log, absolute, r'C, $q=80$', fontsize=axsize)
+    elif i == 4:
+        ax.text(x_absolute_log, absolute, r'C, $q=150$', fontsize=axsize)
+    elif i == 5:
+        ax.text(x_absolute, absolute, r'D, $q=80$', fontsize=axsize)
 
     if i == 0:
         ax.get_xaxis().set_ticks([0, 20, 40, 60])

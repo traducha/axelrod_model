@@ -75,6 +75,19 @@ def draw(_type):
         tick.set_y(-0.01)
     for tick in ax.yaxis.get_majorticklabels():
         tick.set_x(-0.01)
+
+    lx, ly = 5000, 0.9
+    if _type == 'BA':
+        ax.text(lx, ly, r'A', fontsize=axsize)
+    elif _type == 'k_plus_a':
+        ax.text(lx, ly, r'B', fontsize=axsize)
+    elif _type == 'k_plus_a2':
+        ax.text(lx, ly, r'C', fontsize=axsize)
+    elif _type == 'cluster':
+        ax.text(lx, ly, r'D', fontsize=axsize)
+    elif _type == 'normal':
+        ax.text(lx - 3700, ly, r'original', fontsize=axsize)
+
     plt.tight_layout()
     # for end in ['pdf', 'svg']:
     #     plt.savefig('/home/tomaszraducha/Pulpit/{}_c.{}'.format(_type, end), format=end, bbox_inches='tight')
