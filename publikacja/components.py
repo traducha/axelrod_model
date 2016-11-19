@@ -55,6 +55,10 @@ fig = plt.figure()
 
 for i, mode in enumerate(modes):
     r = base.read_object_from_file('{}/{}_components_N500_q{}_av3000.data'.format(components_file, mode, mapping[mode]['qc']))
+    norm = sum(r.values()) * 1.0
+    for key, value in r.items():
+        r[key] = value * 1.0 / norm
+
     x = r.keys()
     y = r.values()
     popt, pcov = fit(f, x[3:], y[3:])
@@ -83,7 +87,7 @@ for i, mode in enumerate(modes):
     ax.set_xlim(xmin=0.8)
     ax.set_ylim(ymin=min(r.values()) / 2.0)
     ax.set_ylim(ymax=max(r.values()) * 2.0)
-    ax.get_yaxis().set_ticks([0.001, 0.1, 10])
+    ax.get_yaxis().set_ticks([0.00001, 0.001, 0.1])
     ax.tick_params(axis='both', which='major', labelsize=ticksize)  # standard 12
     for tick in ax.xaxis.get_majorticklabels():
         # tick.set_verticalalignment("top")
