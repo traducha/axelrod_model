@@ -81,7 +81,7 @@ for i, mode in enumerate(modes):
     if i in [2, 3]:
         ax.set_xlabel('$S$', fontsize=axsize)
     if i in [0, 2]:
-        ax.set_ylabel(r'$P(S)$', fontsize=axsize)
+        ax.set_ylabel(r'$P\ (S)$', fontsize=axsize)
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_xlim(xmin=0.8)

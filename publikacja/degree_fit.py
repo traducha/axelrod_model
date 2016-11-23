@@ -138,15 +138,15 @@ def fit_one_plot(func, q, mode, show=True, scale='normal', norm_all=False, skip_
     return res
 
 
-funcs = ['poisson', 'expon', 'norm', 'pareto']
+funcs = ['expon'] # ['poisson', 'expon', 'norm', 'pareto']
 q_list = [2, 80, 150, 5000]
 show = 1
-skip_first = 2  # how many to skip
-norm_all = 0
-scale = 'normal'  # normal, ylog, log
-mode = 'cluster'  # 'normal', 'BA', 'cluster', 'k_plus_a', 'k_plus_a2'
+skip_first = 7  # how many to skip
+norm_all = 1
+scale = 'ylog'  # normal, ylog, log
+mode = 'k_plus_a'  # 'normal', 'BA', 'cluster', 'k_plus_a', 'k_plus_a2'
 if __name__ == '__main__':
-    for q in [5000]:  # 2, 80, 150, 5000
+    for q in [150]:  # 2, 80, 150, 5000
         for func in funcs:
             res = fit_one_plot(func, q, mode, show=show, scale=scale, norm_all=norm_all, skip_first=skip_first)
             print
