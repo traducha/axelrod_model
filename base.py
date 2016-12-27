@@ -845,30 +845,32 @@ class AxSimulation:
         res = {'time': [], 'switches_sum': [], 'domains': [], 'components': [], 'degree': []}
         switches_sum = 0
         for i in range(T):
-            #get one node and randomly select one of it's neighbors
+            # get one node and randomly select one of it's neighbors
             index = int(rand()*n)
             neigs = g.neighbors(index)
             if not neigs:
                 continue
             neig_index = random.choice(neigs)
-            #compare attributes of two nodes
+            # compare attributes of two nodes
             vertex_attrs = g.vs(index)["f"][0]
             neighbor_attrs = g.vs(neig_index)["f"][0]
             m = np.count_nonzero((vertex_attrs == neighbor_attrs))
-            #decide what to do according to common attributes
+            # decide what to do according to common attributes
             if m == 0:
                 self.switch_function(g, index, neig_index, n, neigs)
                 switches_sum += 1
             elif m != self.f and rand() < m*1.0/self.f:
                 change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
                 vertex_attrs[change_attr] = neighbor_attrs[change_attr]
-            #save some data
+            # save some data
             if i % save_step == 0:
                 res['time'].append(i)
                 res['switches_sum'].append(switches_sum)
                 # res['components'].append(g.get_components())
                 # res['domains'].append(g.get_domains())
                 # res['degree'].append(list((x, y) for x, _, y in g.degree_distribution().bins()))  # remember about g.degree()
+        res['time'].append(T)
+        res['switches_sum'].append(switches_sum)
         return res, g
 
     def func_star(self, chain):
@@ -1116,14 +1118,20 @@ if __name__ == '__main__':
     # q_list = [2, 50, 100, 500]
     # simulation.watch_many_graphs(500, 1000000, q_list)
 
-    model = 'high_k_cluster'
-    for q in [2]:
-        # g = AxGraph.random_graph_with_attrs(N=500, q=q)
-        print(read_object_from_file('q=2.data'))
-        break
-        __a = 1
+    model = 'k_plus_a'
+    for q in [5000, 5000, 5000, 5000, 5000]:
         simulation = AxSimulation(model, 4.0, 3, 4, [])
-        simulation.save_data(500, 2000000, 2, [2])
+        g = AxGraph.random_graph_with_attrs(N=500, q=q)
+        res, g = simulation.basic_algorithm_watch_graph(g, 1000000)  # type: AxGraph
+        print(q)
+        print(res['time'][-1], res['switches_sum'][-1], 100.0 * res['switches_sum'][-1] / res['time'][-1])
+        print()
+
+        # print(read_object_from_file('q=2.data'))
+        # break
+        # __a = 1
+        # simulation = AxSimulation(model, 4.0, 3, 4, [])
+        # simulation.save_data(500, 2000000, 2, [2])
         # g = simulation.basic_algorithm(g, 2000000)  # type: AxGraph
         # print(model, q, g.is_static())
         # # g.pickle('/home/tomaszraducha/Pulpit/graph_{}_q{}.data'.format(model, q))

@@ -5,14 +5,25 @@ from matplotlib import pyplot as plt
 import logging as log
 import time
 import base
+import numpy as np
+import math
+from scipy.optimize import curve_fit as fit
 
 log.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=log.INFO)
 N = 500
 T = 3000000
 processes = 12
-q_list = [2, 80, 150, 5000]
-av_over = 400
-modes = ['normal', 'BA', 'cluster', 'k_plus_a', 'k_plus_a2']
+q_list = [5000]  # [2, 80, 150, 5000]
+av_over = 100
+modes = ['BA']  # ['normal', 'BA', 'cluster', 'k_plus_a', 'k_plus_a2']
+
+
+def poisson(x, l):
+    return [1.0 * (l ** y) * (np.exp(-l)) / math.factorial(y) for y in x]
+
+
+def e(x, l):
+    return [(1.0 / (l)) * np.exp(-y*1.0/l) for y in x]
 
 
 def get_degree(q, mode, av_over):
@@ -88,6 +99,8 @@ def plot_degree(k_list, q=None, mode=None, save_as=False):
             plt.scatter(k.keys()[1:], k.values()[1:], color=color)
         else:
             plt.scatter(k.keys(), k.values())
+        plt.plot(k.keys(), poisson(k.keys(), 4.0), '-', color='black')
+        plt.plot(k.keys(), e(k.keys(), 4.0), '--', color='black')
     if mode:
         plt.suptitle(mode, fontsize=18)
     if q:
@@ -95,9 +108,9 @@ def plot_degree(k_list, q=None, mode=None, save_as=False):
     plt.xlabel('k')
     plt.ylabel('number of nodes')
     if save_as:
-        plt.savefig(save_as + '.png')
-    else:
-        plt.show()
+        pass
+        # plt.savefig(save_as + '.png')
+    plt.show()
     plt.clf()
 
     # log-log plot
@@ -109,9 +122,11 @@ def plot_degree(k_list, q=None, mode=None, save_as=False):
         elif i == 2:
             color = 'green'
         if k.keys()[0] == 0:
-            plt.scatter(k.keys()[1:], k.values()[1:], color=color)
+            plt.scatter(k.keys(), k.values(), color=color)
         else:
             plt.scatter(k.keys(), k.values())
+        plt.plot(k.keys()[1:], poisson(k.keys()[1:], 4.0), '-', color='black')
+        plt.plot(k.keys(), e(k.keys(), 4.0), '--', color='black')
     if mode:
         plt.suptitle(mode, fontsize=18)
     if q:
@@ -122,9 +137,9 @@ def plot_degree(k_list, q=None, mode=None, save_as=False):
     plt.yscale('log')
     plt.ylim(ymin=ymin)
     if save_as:
-        plt.savefig(save_as + '_log-log.png')
-    else:
-        plt.show()
+        pass
+        # plt.savefig(save_as + '_log-log.png')
+    plt.show()
     plt.clf()
 
     # y axis in log scale
@@ -139,6 +154,12 @@ def plot_degree(k_list, q=None, mode=None, save_as=False):
             plt.scatter(k.keys()[1:], k.values()[1:], color=color)
         else:
             plt.scatter(k.keys(), k.values())
+        if i == 2:
+            popt, pcov = fit(poisson, k.keys()[10:], k.values()[10:])
+            print popt[0]
+            plt.plot(k.keys()[1:], poisson(k.keys()[1:], popt[0]), '--', color='black')
+            plt.plot(k.keys(), poisson(k.keys(), 30.0), '-', color='black')
+        # plt.plot(k.keys(), e(k.keys(), 4.0), '--', color='black')
     if mode:
         plt.suptitle(mode, fontsize=18)
     if q:
@@ -148,9 +169,9 @@ def plot_degree(k_list, q=None, mode=None, save_as=False):
     plt.yscale('log')
     plt.ylim(ymin=ymin)
     if save_as:
-        plt.savefig(save_as + '_y-log.png')
-    else:
-        plt.show()
+        pass
+        # plt.savefig(save_as + '_y-log.png')
+    plt.show()
     plt.clf()
     return
 
@@ -159,12 +180,28 @@ def plot_degree_from_file(file_name=None):
     if not file_name:
         for mode in modes:
             for q in q_list:
-                f_name = 'degree/' + mode + '_degree_N' + str(500) + '_q' + str(q) + '_av' + str(av_over) + '.data'
-                f_name2 = 'degree/' + mode + '_degree_N' + str(1000) + '_q' + str(q) + '_av' + str(av_over) + '.data'
-                f_name3 = 'degree/' + mode + '_degree_N' + str(2000) + '_q' + str(q) + '_av' + str(av_over) + '.data'
-                k1 = base.read_object_from_file(f_name)
-                k2 = base.read_object_from_file(f_name2)
-                k3 = base.read_object_from_file(f_name3)
+                try:
+                    f_name = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist/' + mode + '_degree_N' + str(500) + '_q' + str(q) + '_av' + str(av_over) + '.data'
+                    k1 = base.read_object_from_file(f_name)
+                except:
+                    f_name = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist/dynamical/' + mode + '_degree_N' + str(
+                        500) + '_q' + str(q) + '_av' + str(av_over) + '.data'
+                    k1 = base.read_object_from_file(f_name)
+                try:
+                    f_name2 = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist/' + mode + '_degree_N' + str(1000) + '_q' + str(q) + '_av' + str(av_over) + '.data'
+                    k2 = base.read_object_from_file(f_name2)
+                except:
+                    f_name2 = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist/dynamical/' + mode + '_degree_N' + str(
+                        1000) + '_q' + str(q) + '_av' + str(av_over) + '.data'
+                    k2 = base.read_object_from_file(f_name2)
+                try:
+                    f_name3 = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist/' + mode + '_degree_N' + str(2000) + '_q' + str(q) + '_av' + str(av_over) + '.data'
+                    k3 = base.read_object_from_file(f_name3)
+                except:
+                    f_name3 = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist/dynamical/' + mode + '_degree_N' + str(
+                        2000) + '_q' + str(q) + '_av' + str(av_over) + '.data'
+                    k3 = base.read_object_from_file(f_name3)
+
                 for k in [k1, k2, k3]:
                     norm = sum(k.values()) * 1.0
                     for key, value in k.items():
