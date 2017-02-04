@@ -810,17 +810,17 @@ class AxSimulation:
         n = len(g.vs())
         for i in range(T):
             print(i)
-            #get one node and randomly select one of it's neighbors
+            # get one node and randomly select one of it's neighbors
             index = int(rand()*n)
             neigs = g.neighbors(index)
             if not neigs:
                 continue
             neig_index = random.choice(neigs)
-            #compare attributes of two nodes
+            # compare attributes of two nodes
             vertex_attrs = g.vs(index)["f"][0]
             neighbor_attrs = g.vs(neig_index)["f"][0]
             m = np.count_nonzero((vertex_attrs == neighbor_attrs))
-            #decide what to do according to common attributes
+            # decide what to do according to common attributes
             if m == 0:
                 self.switch_function(g, index, neig_index, n, neigs)
             elif m != self.f and rand() < m*1.0/self.f:
