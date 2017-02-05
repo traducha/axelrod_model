@@ -470,7 +470,7 @@ def basic_algorithm_multi(mode, f, g, T):
         elif m != f and rand() < m*1.0/f:
             change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
             vertex_attrs[change_attr] = neighbor_attrs[change_attr]
-        if i % 100000 == 0:
+        if i % 40000 == 0:
             if g.is_static():
                 return g
     return g
@@ -826,7 +826,7 @@ class AxSimulation:
             elif m != self.f and rand() < m*1.0/self.f:
                 change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
                 vertex_attrs[change_attr] = neighbor_attrs[change_attr]
-            if i % 100000 == 0:
+            if i % 40000 == 0:
                 if g.is_static():
                     return g
         return g
