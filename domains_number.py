@@ -5,6 +5,7 @@ import glob
 import re
 import time
 import logging as log
+from matplotlib import pyplot as plt
 import numpy as np
 import base
 from base import *
@@ -67,7 +68,7 @@ def fetch_results():
         mode, N, q = match.groups()
         N = int(N)
 
-        key = ''.join([mode, ' q=', q])
+        key = ''.join([mode, '_q=', q])
         if key not in res:
             res[key] = {}
 
@@ -81,6 +82,35 @@ def fetch_results():
     return res
 
 
+def plot_results(res, show=False):
+    for q_mode, results in res.items():
+        dom_av = []
+        dom_std = []
+        com_av = []
+        com_std = []
+        n_list = []
+        for N, values in results.items():
+            dom_av.append(values['dom_av'])
+            dom_std.append(values['dom_std'])
+            com_av.append(values['com_av'])
+            com_std.append(values['com_std'])
+            n_list.append(N)
+
+        plt.errorbar(n_list, com_av, yerr=com_std, fmt='o', fillstyle='none', ecolor='blue')
+        plt.errorbar(n_list, dom_av, yerr=dom_std, fmt='o', fillstyle='none', ecolor='red')
+        plt.title(q_mode)
+        plt.xlabel('N')
+        plt.ylabel('number of doms (red), comps (blue)')
+
+        if show:
+            plt.show()
+        else:
+            plt.savefig(''.join([q_mode, '.png']), format='png')
+        plt.clf()
+
+
 if __name__ == '__main__':
     # run_in_loop()
-    pprint.pprint(fetch_results())
+    res = fetch_results()
+    pprint.pprint(res)
+    plot_results(res)
