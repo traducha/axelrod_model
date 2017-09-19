@@ -285,7 +285,7 @@ def switch_connection_while(g, index, del_index, n, neigs):
     @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
-    g.delete_edges((index, del_index))
+    g.delete_edges([(index, del_index)])
     while 1:
         new_neig = random.randint(0,n-1)
         if new_neig not in neigs and new_neig != index:
@@ -305,7 +305,7 @@ def switch_connection_BA(g, index, del_index, n, neigs):
     @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
-    g.delete_edges((index, del_index))
+    g.delete_edges([(index, del_index)])
     edges = len(g.es())  # g.es() is faster than g.get_edgelist()
     while 1:
         new_neig = g.get_edgelist()[random.randint(0, edges-1)][random.randint(0, 1)]
@@ -324,7 +324,7 @@ def switch_connection_cluster(g, index, del_index, n, neigs):
     @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
-    g.delete_edges((index, del_index))
+    g.delete_edges([(index, del_index)])
     switch_group = []
     new_neig = None
     for node in neigs:
@@ -350,7 +350,7 @@ def switch_connection_cluster(g, index, del_index, n, neigs):
     # random.shuffle(switch_group)
     # for i in switch_group:
     #     if i not in neigs and i != index:
-    #         g.delete_edges((index, del_index))
+    #         g.delete_edges([(index, del_index)])
     #         g.add_edges([(index, i)])
     #         break
     # return g
@@ -369,7 +369,7 @@ def switch_connection_k_plus_a(g, index, del_index, n, neigs):
     @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
-    g.delete_edges((index, del_index))
+    g.delete_edges([(index, del_index)])
     cumulative_degree_plus_a = np.cumsum(np.array(g.degree()) + __a)
     while 1:
         new_neig = np.searchsorted(cumulative_degree_plus_a, random.randint(1, cumulative_degree_plus_a[-1]))
@@ -390,7 +390,7 @@ def switch_connection_k_plus_a2(g, index, del_index, n, neigs):
     @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
-    g.delete_edges((index, del_index))
+    g.delete_edges([(index, del_index)])
     cumulative_degree_plus_a = np.cumsum((np.array(g.degree()) + __a)**2.0)
     while 1:
         new_neig = np.searchsorted(cumulative_degree_plus_a, random.randint(1, cumulative_degree_plus_a[-1]))
@@ -409,7 +409,7 @@ def switch_connection_high_k_cluster(g, index, del_index, n, neigs):
     @param neigs: ids of neighbors of index
     @return: graph g after switch
     """
-    g.delete_edges((index, del_index))
+    g.delete_edges([(index, del_index)])
     switch_group = []
     new_neig = None
     for node in neigs:
@@ -654,7 +654,7 @@ class AxSimulation:
         @param neigs: ids of neghbors of index
         @return: graph g after switch
         """
-        g.delete_edges((index, del_index))
+        g.delete_edges([(index, del_index)])
         new_neig = random.choice(list(set(range(n)).difference(neigs + [index])))
         g.add_edges([(index, new_neig)])
         return g
@@ -669,7 +669,7 @@ class AxSimulation:
         @param neigs: ids of neighbors of index
         @return: graph g after switch
         """
-        g.delete_edges((index, del_index))
+        g.delete_edges([(index, del_index)])
         while 1:
             new_neig = random.randint(0,n-1)
             if new_neig not in neigs and new_neig != index:
@@ -688,7 +688,7 @@ class AxSimulation:
         @param neigs: ids of neighbors of index
         @return: graph g after switch
         """
-        g.delete_edges((index, del_index))
+        g.delete_edges([(index, del_index)])
         edges = len(g.es())  # g.es() is faster than g.get_edgelist()
         while 1:
             new_neig = g.get_edgelist()[random.randint(0, edges-1)][random.randint(0, 1)]
@@ -706,7 +706,7 @@ class AxSimulation:
         @param neigs: ids of neighbors of index
         @return: graph g after switch
         """
-        g.delete_edges((index, del_index))
+        g.delete_edges([(index, del_index)])
         switch_group = []
         new_neig = None
         for node in neigs:
@@ -741,7 +741,7 @@ class AxSimulation:
         @param neigs: ids of neighbors of index
         @return: graph g after switch
         """
-        g.delete_edges((index, del_index))
+        g.delete_edges([(index, del_index)])
         cumulative_degree_plus_a = np.cumsum(np.array(g.degree()) + self.a)
         while 1:
             new_neig = np.searchsorted(cumulative_degree_plus_a, random.randint(1, cumulative_degree_plus_a[-1]))
@@ -761,7 +761,7 @@ class AxSimulation:
         @param neigs: ids of neighbors of index
         @return: graph g after switch
         """
-        g.delete_edges((index, del_index))
+        g.delete_edges([(index, del_index)])
         cumulative_degree_plus_a = np.cumsum((np.array(g.degree()) + self.a)**2.0)
         while 1:
             new_neig = np.searchsorted(cumulative_degree_plus_a, random.randint(1, cumulative_degree_plus_a[-1]))
@@ -779,7 +779,7 @@ class AxSimulation:
         @param neigs: ids of neighbors of index
         @return: graph g after switch
         """
-        g.delete_edges((index, del_index))
+        g.delete_edges([(index, del_index)])
         switch_group = []
         new_neig = None
         for node in neigs:
