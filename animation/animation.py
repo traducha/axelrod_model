@@ -7,10 +7,10 @@ import igraph as ig
 import os
 
 
-mode = 'high_k_cluster'
+mode = 'normal'
 speed_times = 3
 Q = (2, 20, 1000)
-T = (10000, 10000, 2000)
+T = (10000, 12000, 2000)
 N = 50
 f = 3
 av_k = 4.0
@@ -31,7 +31,8 @@ def plot_g(g, count_plots, layout, niter=None):
     return get_layout(g, niter=niter, seed=layout), count_plots + 1
 
 
-def animate(q=None, T=None, init_g=None, layout=None, init_states=None, sim=None, count_plots=1, speed_times=1):
+def animate(q=None, T=None, init_g=None, layout=None, init_states=None, sim=None, count_plots=1, speed_times=1,
+            divided=False, name=None):
     g = init_g.copy(q, init_states)
     g.set_all_colors()
 
@@ -56,29 +57,39 @@ def animate(q=None, T=None, init_g=None, layout=None, init_states=None, sim=None
         layout, count_plots = plot_g(g, count_plots, layout, niter=5)
     plot_cd(T, comp, dom)
 
+    if divided:
+        os.system('ffmpeg -r 30 -pattern_type sequence -s 720x720 -start_number {} -i "plots/%d.png" '
+                  '-c:v libx264 -q:v 1 vids/{}.mp4'.format(first_plot, name))
+
     old_count_plot = count_plots
     for i in range(first_plot, old_count_plot):
         if i % speed_times == 0:
             os.system('cp plots/{}.png plots/{}.png'.format(i, old_count_plot + (old_count_plot - i - 1) / speed_times))
             count_plots += 1
+
+    if divided:
+        os.system('ffmpeg -r 30 -pattern_type sequence -s 720x720 -start_number {} -i "plots/%d.png" '
+                  '-c:v libx264 -q:v 1 vids/{}.mp4'.format(old_count_plot, name + 'back'))
     return count_plots
 
 
-sim = AxSimulation(mode, av_k, f, 1, [])
-init_states = rand((N, f))
-init_g = AxGraph.random_graph_with_attrs(N, sim.av_k, sim.f, q=2, edge_width=2, init_states=init_states)
-count_plots = 1
-kwargs = {
-    'init_g': init_g,
-    'layout': get_layout(init_g, niter=500),
-    'init_states': init_states,
-    'sim': sim,
-    'speed_times': speed_times,
-}
+if __name__ == '__main__':
+    sim = AxSimulation(mode, av_k, f, 1, [])
+    init_states = rand((N, f))
+    init_g = AxGraph.random_graph_with_attrs(N, sim.av_k, sim.f, q=2, edge_width=2, init_states=init_states)
+    count_plots = 1
+    kwargs = {
+        'init_g': init_g,
+        'layout': get_layout(init_g, niter=500),
+        'init_states': init_states,
+        'sim': sim,
+        'speed_times': speed_times,
+    }
 
-count_plots = animate(q=Q[0], T=T[0], count_plots=count_plots, **kwargs)
-count_plots = animate(q=Q[1], T=T[1], count_plots=count_plots, **kwargs)
-count_plots = animate(q=Q[2], T=T[2], count_plots=count_plots, **kwargs)
+    for i in range(len(Q)):
+        count_plots = animate(q=Q[i], T=T[i], count_plots=count_plots, divided=True, name=''.join([mode, str(i)]),
+                              **kwargs)
 
-os.system('ffmpeg -r 30 -pattern_type sequence -s 720x720 -start_number 0 -i "plots/%d.png" -q:v 1 {}{}.mp4'.format(mode, speed_times))
-os.system('rm plots/*.png')
+    # os.system('ffmpeg -r 30 -pattern_type sequence -s 720x720 -start_number 0 -i "plots/%d.png" '
+    #           '-c:v libx264 -q:v 1 vids/{}{}.mp4'.format(mode, speed_times))
+    os.system('rm plots/*.png')
