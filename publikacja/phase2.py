@@ -100,8 +100,8 @@ def draw(content=None):
     # for end in ['pdf', 'svg']:
     #     plt.savefig('/home/tomaszraducha/Pulpit/all_{}.{}'.format(content, end), format=end, bbox_inches='tight')
     plt.show()
-    fig.clf()
-    plt.clf()
+    # fig.clf()
+    # plt.clf()
 
 for p in ('c_local', 'c_global', 's', 'd'):
     draw(content=p)

@@ -11,7 +11,7 @@ print(mpl.rcParams['figure.figsize'])  # TODO default is [8, 6]
 ticksize = 14
 axsize = 16
 mapping = {
-    'cluster': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/cluster',
+    'cluster': {'phase': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/cluster',
                 'first': 3,
                 'second': 129},
 }
@@ -55,10 +55,10 @@ def draw(mode):
         tick.set_x(-0.01)
 
     plt.tight_layout()
-    for end in ['pdf', 'svg']:
-        plt.savefig('/home/tomaszraducha/Pulpit/scaling.{}'.format(end), format=end, bbox_inches='tight')
+    # for end in ['pdf', 'svg']:
+    #     plt.savefig('/home/tomaszraducha/Pulpit/scaling.{}'.format(end), format=end, bbox_inches='tight')
     plt.show()
-    plt.clf()
+    # plt.clf()
 
 
 modes = ['cluster']

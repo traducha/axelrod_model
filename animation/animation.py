@@ -7,7 +7,7 @@ import igraph as ig
 import os
 
 
-mode = 'normal'
+mode = 'cluster'
 speed_times = 3
 Q = (2, 20, 1000)
 T = (10000, 12000, 2000)

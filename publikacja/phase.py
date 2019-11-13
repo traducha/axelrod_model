@@ -10,24 +10,24 @@ ticksize = 14 * 0.75 / 0.5
 axsize = 16 * 0.75 / 0.5
 
 type_constants = {
-    'BA': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/BA/N500',
-           'clustering': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/components/BA',
+    'BA': {'phase': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/BA/N500',
+           'clustering': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/components/BA',
            'first': 19,
            'second': 144},
-    'normal': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/normal/N500',
-               'clustering': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/components/normal',
+    'normal': {'phase': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/normal/N500',
+               'clustering': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/components/normal',
                'first': 22,
                'second': 389},
-    'k_plus_a': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/k_plus_a/a1/N500',
-                 'clustering': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/components/k_plus_a',
+    'k_plus_a': {'phase': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/k_plus_a/a1/N500',
+                 'clustering': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/components/k_plus_a',
                  'first': 19,
                  'second': 333},
-    'k_plus_a2': {'phase': '/home/tomaszraducha/Dropbox/Dane/home2/mgr/k_plus_a2/a1/N500',
-                  'clustering': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/components/k_plus_a2',
+    'k_plus_a2': {'phase': '/home/tomaszraducha/Dropbox/DaneAxelrod/home2/mgr/k_plus_a2/a1/N500',
+                  'clustering': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/components/k_plus_a2',
                   'first': 9,
                   'second': 111},
-    'cluster': {'phase': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/cluster/N500',
-                'clustering': '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/components/cluster',
+    'cluster': {'phase': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/cluster/N500',
+                'clustering': '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/components/cluster',
                 'first': 3,
                 'second': 129},
 }
@@ -92,7 +92,7 @@ def draw(_type):
     # for end in ['pdf', 'svg']:
     #     plt.savefig('/home/tomaszraducha/Pulpit/{}_c.{}'.format(_type, end), format=end, bbox_inches='tight')
     plt.show()
-    plt.clf()
+    # plt.clf()
 
 
 types = type_constants.keys()

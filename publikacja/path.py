@@ -29,7 +29,7 @@ def lin(x, a, b):
 
 
 def plot_path(mode):
-    r = base.read_object_from_file('/home/tomaszraducha/Dropbox/Dane/mgr/mgr/path/{}_paths_q3_av48.data'.format(mode))
+    r = base.read_object_from_file('/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/path/{}_paths_q3_av48.data'.format(mode))
     y = []
     y2 = []
     for N in N_list:
@@ -57,7 +57,7 @@ fig = plt.figure()
 
 for i, mode in enumerate(modes):
     ax = fig.add_subplot(mode_sublot[mode])
-    r = base.read_object_from_file('/home/tomaszraducha/Dropbox/Dane/mgr/mgr/path/{}_paths_q3_av48.data'.format(mode))
+    r = base.read_object_from_file('/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/path/{}_paths_q3_av48.data'.format(mode))
     y = []
     y2 = []
     for N in N_list:

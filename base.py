@@ -809,7 +809,6 @@ class AxSimulation:
         """
         n = len(g.vs())
         for i in range(T):
-            print(i)
             # get one node and randomly select one of it's neighbors
             index = int(rand()*n)
             neigs = g.neighbors(index)
@@ -827,6 +826,7 @@ class AxSimulation:
                 change_attr = random.choice(np.where((vertex_attrs == neighbor_attrs) == False)[0])
                 vertex_attrs[change_attr] = neighbor_attrs[change_attr]
             if i % 40000 == 0:
+                print i
                 if g.is_static():
                     return g
         return g
@@ -1118,14 +1118,20 @@ if __name__ == '__main__':
     # q_list = [2, 50, 100, 500]
     # simulation.watch_many_graphs(500, 1000000, q_list)
 
-    model = 'k_plus_a'
-    for q in [5000, 5000, 5000, 5000, 5000]:
-        simulation = AxSimulation(model, 4.0, 3, 4, [])
-        g = AxGraph.random_graph_with_attrs(N=500, q=q)
-        res, g = simulation.basic_algorithm_watch_graph(g, 1000000)  # type: AxGraph
-        print(q)
-        print(res['time'][-1], res['switches_sum'][-1], 100.0 * res['switches_sum'][-1] / res['time'][-1])
-        print()
+    # model = 'k_plus_a2'
+    # q = 200
+    # simulation = AxSimulation(model, 6.0, 3, 1, [])
+    # g = AxGraph.random_graph_with_attrs(N=500, q=q)
+    # g = simulation.basic_algorithm(g, 1500000)  # type: AxGraph
+    # g.pickle('/home/tomaszraducha/Pulpit/graph500_q200'.format(500, q))
+    g = AxGraph.load('/home/tomaszraducha/Pulpit/graph500_q200')
+    layout = ig.Graph.layout_kamada_kawai(g)
+    for i in xrange(len(g.vs())):
+            g.vs(i)['color'] = '#26A57C'
+    g.es["width"] = 1.5
+    g.vs["size"] = 12
+    ig.plot(g, layout=layout, target='/home/tomaszraducha/Pulpit/graph500_q200.pdf')
+
 
         # print(read_object_from_file('q=2.data'))
         # break

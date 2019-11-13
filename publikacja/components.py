@@ -19,7 +19,7 @@ mapping = {
     'k_plus_a2': {'qc': 10},  # TODO probably we should calculate it for q=9 for this model
     'cluster': {'qc': 3},
 }
-components_file = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/components'
+components_file = '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/components'
 
 
 def f(x, a, b):
@@ -42,7 +42,7 @@ def plot_comps(dist):
     plt.ylim(ymin=min(dist.values())/2.0)
     plt.ylim(ymax=max(dist.values())*2.0)
     plt.show()
-    plt.clf()
+    # plt.clf()
 
 
 # for mode in modes:

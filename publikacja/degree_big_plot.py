@@ -57,8 +57,8 @@ plots = [('BA', 2, 1), ('BA', 80, 2), ('BA', 5000, 3),
          ('k_plus_a', 2, 4), ('k_plus_a', 150, 5), ('k_plus_a', 5000, 6),
          ('k_plus_a2', 2, 7), ('k_plus_a2', 80, 8), ('k_plus_a2', 5000, 9),
          ('cluster', 2, 10), ('cluster', 80, 11), ('cluster', 5000, 12)]
-path1 = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist'
-path2 = '/home/tomaszraducha/Dropbox/Dane/mgr/mgr/degree_dist/dynamical'
+path1 = '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/degree_dist'
+path2 = '/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/degree_dist/dynamical'
 fig = plt.figure()
 
 for p in plots:
@@ -264,7 +264,7 @@ for p in plots:
 
 
 plt.tight_layout()
-for end in ['pdf', 'svg']:
-    plt.savefig('/home/tomaszraducha/Pulpit/degree_big.{}'.format(end), format=end, bbox_inches='tight')
+# for end in ['pdf', 'svg']:
+#     plt.savefig('/home/tomaszraducha/Pulpit/degree_big.{}'.format(end), format=end, bbox_inches='tight')
 plt.show()
 
