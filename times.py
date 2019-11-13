@@ -32,7 +32,7 @@ if __name__ == '__main__' and 0:
 
 
 r = {}
-res = base.read_object_from_file('times/k_plus_a_times_N=500_av=500.data')
+res = base.read_object_from_file('/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/times/final/k_plus_a_times_N=500_av=500.data')
 for key, value in res.items():
     if key != 'q':
         r[key] = list(np.array(value) / 500.0)

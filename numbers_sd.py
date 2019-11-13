@@ -76,7 +76,7 @@ for mode in modes:
     f, ax = plt.subplots(6, sharex=True, sharey=True, figsize=(8, 10))
     ax[0].set_title('Number of components (blue) and domains (green) for mode ' + mode)
     for i, q in enumerate(q_list):
-        r = base.read_object_from_file('numbers_sd/' + mode + '_q' + str(q) + '_N500_numbers.data')
+        r = base.read_object_from_file('/home/tomaszraducha/Dropbox/DaneAxelrod/mgr/mgr/numbers_sd/' + mode + '_q' + str(q) + '_N500_numbers.data')
         ax[i].plot(r['t'], r['s'], color='blue')
         ax[i].plot(r['t'], r['d'], color='green')
         ax[i].set_xscale('log')
@@ -89,7 +89,7 @@ for mode in modes:
                        # horizontalalignment='right', verticalalignment='top')
     f.subplots_adjust(hspace=0)
     plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
-    plt.savefig('numbers_sd/' + mode + '_numbers.png')
-    # plt.show()
-    plt.clf()
+    # plt.savefig('numbers_sd/' + mode + '_numbers.png')
+    plt.show()
+    # plt.clf()
 
